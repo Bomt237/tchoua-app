@@ -1,0 +1,886 @@
+{
+  "versements": [
+    {
+      "name": "ANDRE SOH",
+      "date": "2022-11-02T00:00:00",
+      "amount": 1000000
+    },
+    {
+      "name": "PALO VALENTIN",
+      "date": "2022-11-28T00:00:00",
+      "amount": 1000000
+    },
+    {
+      "name": "WAFFO MAURICE",
+      "date": "2022-11-28T00:00:00",
+      "amount": 1000000
+    },
+    {
+      "name": "KENDOUM ERNEST",
+      "date": "2022-11-30T00:00:00",
+      "amount": 1000000
+    },
+    {
+      "name": "TAMPOLLA SERGE",
+      "date": "2022-12-09T00:00:00",
+      "amount": 1000000
+    },
+    {
+      "name": "FONGANG JEAN NOEL",
+      "date": "2023-01-27T00:00:00",
+      "amount": 2000000
+    },
+    {
+      "name": "TALLA VALENTIN",
+      "date": "2024-03-11T00:00:00",
+      "amount": 1000000
+    }
+  ],
+  "prets": [
+    {
+      "id": 1,
+      "member": "KENDOUM ERNEST",
+      "amount": 1500000,
+      "date": "2024-03-07T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-06-07T00:00:00",
+      "interest": 290000,
+      "totalDue": 1790000,
+      "encours": 572.0135680001695,
+      "status": "Terminé"
+    },
+    {
+      "id": 2,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1000000,
+      "date": "2024-03-07T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-06-07T00:00:00",
+      "interest": 40000,
+      "totalDue": 1040000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 3,
+      "member": "PALO VALENTIN",
+      "amount": 3000000,
+      "date": "2024-03-11T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-06-11T00:00:00",
+      "interest": 120000,
+      "totalDue": 3120000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 4,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2000000,
+      "date": "2024-03-16T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-06-16T00:00:00",
+      "interest": 80000,
+      "totalDue": 2080000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 5,
+      "member": "WAFFO MAURICE",
+      "amount": 2000000,
+      "date": "2024-06-19T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-09-19T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 2416,
+      "status": "Terminé"
+    },
+    {
+      "id": 6,
+      "member": "PALO VALENTIN",
+      "amount": 1500000,
+      "date": "2024-06-19T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-09-19T00:00:00",
+      "interest": 90000,
+      "totalDue": 1590000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 7,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 1360000,
+      "date": "2024-06-19T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-09-19T00:00:00",
+      "interest": 83500,
+      "totalDue": 1443500,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 8,
+      "member": "TALLA VALENTIN",
+      "amount": 2000000,
+      "date": "2024-06-19T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-09-19T00:00:00",
+      "interest": 180000,
+      "totalDue": 2180000,
+      "encours": 832,
+      "status": "Terminé"
+    },
+    {
+      "id": 9,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2000000,
+      "date": "2024-09-20T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-12-20T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 10,
+      "member": "WAFFO MAURICE",
+      "amount": 2000000,
+      "date": "2024-09-20T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-12-20T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 2416,
+      "status": "Terminé"
+    },
+    {
+      "id": 11,
+      "member": "PALO VALENTIN",
+      "amount": 1500000,
+      "date": "2024-09-20T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2024-12-20T00:00:00",
+      "interest": 90000,
+      "totalDue": 1590000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 12,
+      "member": "KENDOUM ERNEST",
+      "amount": 1000000,
+      "date": "2024-10-16T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-01-16T00:00:00",
+      "interest": 60000,
+      "totalDue": 1060000,
+      "encours": 1208,
+      "status": "Terminé"
+    },
+    {
+      "id": 13,
+      "member": "TALLA VALENTIN",
+      "amount": 2000000,
+      "date": "2024-11-04T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-02-04T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 2416,
+      "status": "Terminé"
+    },
+    {
+      "id": 14,
+      "member": "PALO VALENTIN",
+      "amount": 2000000,
+      "date": "2024-12-27T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-03-27T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 15,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2000000,
+      "date": "2024-12-27T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-03-27T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 16,
+      "member": "WAFFO MAURICE",
+      "amount": 2000000,
+      "date": "2024-12-28T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-03-28T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 17,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1000000,
+      "date": "2025-02-18T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-05-18T00:00:00",
+      "interest": 20000,
+      "totalDue": 1060000,
+      "encours": 400,
+      "status": "Terminé"
+    },
+    {
+      "id": 18,
+      "member": "TALLA VALENTIN",
+      "amount": 2000000,
+      "date": "2025-02-18T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-05-18T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 2416,
+      "status": "Terminé"
+    },
+    {
+      "id": 19,
+      "member": "WAFFO MAURICE",
+      "amount": 2000000,
+      "date": "2025-02-20T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-05-20T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 2416,
+      "status": "Terminé"
+    },
+    {
+      "id": 20,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2000000,
+      "date": "2025-04-01T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-07-01T00:00:00",
+      "interest": 80000,
+      "totalDue": 2080000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 21,
+      "member": "PALO VALENTIN",
+      "amount": 2000000,
+      "date": "2025-04-04T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-07-04T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 22,
+      "member": "TALLA VALENTIN",
+      "amount": 3000000,
+      "date": "2025-05-16T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-08-16T00:00:00",
+      "interest": 180000,
+      "totalDue": 3180000,
+      "encours": 3624,
+      "status": "Terminé"
+    },
+    {
+      "id": 23,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1000000,
+      "date": "2025-05-21T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-08-21T00:00:00",
+      "interest": 60000,
+      "totalDue": 1060000,
+      "encours": 1208,
+      "status": "Terminé"
+    },
+    {
+      "id": 24,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2000000,
+      "date": "2025-07-02T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-10-02T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 2512.64,
+      "status": "Terminé"
+    },
+    {
+      "id": 25,
+      "member": "PALO VALENTIN",
+      "amount": 2000000,
+      "date": "2025-07-09T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-10-09T00:00:00",
+      "interest": 200000,
+      "totalDue": 2200000,
+      "encours": 0,
+      "status": "Terminé"
+    },
+    {
+      "id": 26,
+      "member": "WAFFO MAURICE",
+      "amount": 2000001,
+      "date": "2025-05-21T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-08-21T00:00:00",
+      "interest": 119999,
+      "totalDue": 2120000,
+      "encours": 2513.7436563199385,
+      "status": "Terminé"
+    },
+    {
+      "id": 27,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1000000,
+      "date": "2025-08-07T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-11-07T00:00:00",
+      "interest": 100000,
+      "totalDue": 1100000,
+      "encours": 3656.320000000065,
+      "status": "Terminé"
+    },
+    {
+      "id": 28,
+      "member": "WAFFO MAURICE",
+      "amount": 2000000,
+      "date": "2025-08-25T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-11-25T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 2416,
+      "status": "Terminé"
+    },
+    {
+      "id": 29,
+      "member": "TALLA VALENTIN",
+      "amount": 3000000,
+      "date": "2025-08-25T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2025-11-25T00:00:00",
+      "interest": 180000,
+      "totalDue": 3180000,
+      "encours": 3624,
+      "status": "Terminé"
+    },
+    {
+      "id": 30,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2000000,
+      "date": "2025-12-30T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-03-30T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 2416,
+      "status": "Terminé"
+    },
+    {
+      "id": 31,
+      "member": "PALO VALENTIN",
+      "amount": 2500000,
+      "date": "2025-11-14T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-02-14T00:00:00",
+      "interest": 100000,
+      "totalDue": 2600000,
+      "encours": 53020,
+      "status": "Terminé"
+    },
+    {
+      "id": 32,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1500000,
+      "date": "2025-11-27T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-02-27T00:00:00",
+      "interest": 90000,
+      "totalDue": 1590000,
+      "encours": 1812,
+      "status": "Terminé"
+    },
+    {
+      "id": 33,
+      "member": "WAFFO MAURICE",
+      "amount": 2000000,
+      "date": "2025-11-27T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-02-27T00:00:00",
+      "interest": 120000,
+      "totalDue": 2120000,
+      "encours": 2416,
+      "status": "Terminé"
+    },
+    {
+      "id": 34,
+      "member": "TALLA VALENTIN",
+      "amount": 3000000,
+      "date": "2025-12-01T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-03-01T00:00:00",
+      "interest": 180000,
+      "totalDue": 3180000,
+      "encours": 3624,
+      "status": "Terminé"
+    },
+    {
+      "id": 35,
+      "member": "PALO VALENTIN",
+      "amount": 2500000,
+      "date": "2026-02-18T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-05-18T00:00:00",
+      "interest": null,
+      "totalDue": 0,
+      "encours": 2759140.8000000003,
+      "status": "En cours"
+    },
+    {
+      "id": 36,
+      "member": "TAMPOLLA SERGE",
+      "amount": 2000000,
+      "date": "2026-02-25T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-05-25T00:00:00",
+      "interest": null,
+      "totalDue": 0,
+      "encours": 2295605.1456000004,
+      "status": "En cours"
+    },
+    {
+      "id": 37,
+      "member": "WAFFO MAURICE",
+      "amount": 2000000,
+      "date": "2026-02-28T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-05-28T00:00:00",
+      "interest": null,
+      "totalDue": 0,
+      "encours": 2387429.351424,
+      "status": "En cours"
+    },
+    {
+      "id": 38,
+      "member": "TALLA VALENTIN",
+      "amount": 3000000,
+      "date": "2026-03-16T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-06-16T00:00:00",
+      "interest": null,
+      "totalDue": 0,
+      "encours": 3724389.7882214407,
+      "status": "En cours"
+    },
+    {
+      "id": 39,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2000000,
+      "date": "2026-04-06T00:00:00",
+      "duration": 3,
+      "rate": 0.02,
+      "echeance": "2026-07-06T00:00:00",
+      "interest": null,
+      "totalDue": 0,
+      "encours": 2582243.586500199,
+      "status": "En cours"
+    }
+  ],
+  "remboursements": [
+    {
+      "id": 1,
+      "member": "PALO VALENTIN",
+      "amount": 60000,
+      "date": "2024-04-12T00:00:00"
+    },
+    {
+      "id": 2,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 40000,
+      "date": "2024-04-20T00:00:00"
+    },
+    {
+      "id": 3,
+      "member": "TAMPOLLA SERGE",
+      "amount": 20000,
+      "date": "2024-05-16T00:00:00"
+    },
+    {
+      "id": 4,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1020000,
+      "date": "2024-06-05T00:00:00"
+    },
+    {
+      "id": 5,
+      "member": "PALO VALENTIN",
+      "amount": 3060000,
+      "date": "2024-06-11T00:00:00"
+    },
+    {
+      "id": 6,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2040000,
+      "date": "2024-06-14T00:00:00"
+    },
+    {
+      "id": 7,
+      "member": "PALO VALENTIN",
+      "amount": 30000,
+      "date": "2024-07-19T00:00:00"
+    },
+    {
+      "id": 8,
+      "member": "TALLA VALENTIN",
+      "amount": 40000,
+      "date": "2024-07-03T00:00:00"
+    },
+    {
+      "id": 9,
+      "member": "PALO VALENTIN",
+      "amount": 30000,
+      "date": "2024-07-19T00:00:00"
+    },
+    {
+      "id": 10,
+      "member": "PALO VALENTIN",
+      "amount": 1530000,
+      "date": "2024-09-19T00:00:00"
+    },
+    {
+      "id": 11,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 1443500,
+      "date": "2024-09-14T00:00:00"
+    },
+    {
+      "id": 12,
+      "member": "WAFFO MAURICE",
+      "amount": 2120000,
+      "date": "2024-09-18T00:00:00"
+    },
+    {
+      "id": 13,
+      "member": "TALLA VALENTIN",
+      "amount": 580000,
+      "date": "2024-09-19T00:00:00"
+    },
+    {
+      "id": 14,
+      "member": "KENDOUM ERNEST",
+      "amount": 1790000,
+      "date": "2024-10-07T00:00:00"
+    },
+    {
+      "id": 15,
+      "member": "PALO VALENTIN",
+      "amount": 30000,
+      "date": "2024-10-21T00:00:00"
+    },
+    {
+      "id": 16,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 40000,
+      "date": "2024-10-23T00:00:00"
+    },
+    {
+      "id": 17,
+      "member": "TALLA VALENTIN",
+      "amount": 1560000,
+      "date": "2024-10-30T00:00:00"
+    },
+    {
+      "id": 18,
+      "member": "PALO VALENTIN",
+      "amount": 30000,
+      "date": "2024-11-22T00:00:00"
+    },
+    {
+      "id": 19,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 40000,
+      "date": "2024-11-25T00:00:00"
+    },
+    {
+      "id": 20,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2040000,
+      "date": "2024-12-23T00:00:00"
+    },
+    {
+      "id": 21,
+      "member": "WAFFO MAURICE",
+      "amount": 2120000,
+      "date": "2024-12-23T00:00:00"
+    },
+    {
+      "id": 22,
+      "member": "PALO VALENTIN",
+      "amount": 1530000,
+      "date": "2024-12-23T00:00:00"
+    },
+    {
+      "id": 23,
+      "member": "KENDOUM ERNEST",
+      "amount": 1060000,
+      "date": "2025-01-24T00:00:00"
+    },
+    {
+      "id": 24,
+      "member": "PALO VALENTIN",
+      "amount": 40000,
+      "date": "2025-01-27T00:00:00"
+    },
+    {
+      "id": 25,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 40000,
+      "date": "2025-02-10T00:00:00"
+    },
+    {
+      "id": 26,
+      "member": "TALLA VALENTIN",
+      "amount": 2120000,
+      "date": "2025-02-13T00:00:00"
+    },
+    {
+      "id": 27,
+      "member": "WAFFO MAURICE",
+      "amount": 2120000,
+      "date": "2025-02-19T00:00:00"
+    },
+    {
+      "id": 28,
+      "member": "PALO VALENTIN",
+      "amount": 40000,
+      "date": "2025-03-03T00:00:00"
+    },
+    {
+      "id": 29,
+      "member": "TAMPOLLA SERGE",
+      "amount": 20000,
+      "date": "2025-03-19T00:00:00"
+    },
+    {
+      "id": 30,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2040000,
+      "date": "2025-03-29T00:00:00"
+    },
+    {
+      "id": 31,
+      "member": "PALO VALENTIN",
+      "amount": 2040000,
+      "date": "2025-04-01T00:00:00"
+    },
+    {
+      "id": 32,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 40000,
+      "date": "2025-04-26T00:00:00"
+    },
+    {
+      "id": 33,
+      "member": "PALO VALENTIN",
+      "amount": 40000,
+      "date": "2025-05-05T00:00:00"
+    },
+    {
+      "id": 34,
+      "member": "TALLA VALENTIN",
+      "amount": 2120000,
+      "date": "2025-05-13T00:00:00"
+    },
+    {
+      "id": 35,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1040000,
+      "date": "2025-05-21T00:00:00"
+    },
+    {
+      "id": 36,
+      "member": "PALO VALENTIN",
+      "amount": 40000,
+      "date": "2025-06-09T00:00:00"
+    },
+    {
+      "id": 37,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2040000,
+      "date": "2025-07-01T00:00:00"
+    },
+    {
+      "id": 38,
+      "member": "PALO VALENTIN",
+      "amount": 2040000,
+      "date": "2025-07-07T00:00:00"
+    },
+    {
+      "id": 39,
+      "member": "WAFFO MAURICE",
+      "amount": 2120000,
+      "date": "2025-05-20T00:00:00"
+    },
+    {
+      "id": 40,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1060000,
+      "date": "2025-08-07T00:00:00"
+    },
+    {
+      "id": 41,
+      "member": "PALO VALENTIN",
+      "amount": 40000,
+      "date": "2025-08-11T00:00:00"
+    },
+    {
+      "id": 42,
+      "member": "TALLA VALENTIN",
+      "amount": 3180000,
+      "date": "2025-08-19T00:00:00"
+    },
+    {
+      "id": 43,
+      "member": "WAFFO MAURICE",
+      "amount": 2120000,
+      "date": "2025-08-21T00:00:00"
+    },
+    {
+      "id": 44,
+      "member": "PALO VALENTIN",
+      "amount": 40000,
+      "date": "2025-09-12T00:00:00"
+    },
+    {
+      "id": 45,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2120000,
+      "date": "2025-09-28T00:00:00"
+    },
+    {
+      "id": 46,
+      "member": "PALO VALENTIN",
+      "amount": 40000,
+      "date": "2025-10-21T00:00:00"
+    },
+    {
+      "id": 47,
+      "member": "PALO VALENTIN",
+      "amount": 2040000,
+      "date": "2025-11-11T00:00:00"
+    },
+    {
+      "id": 48,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1100000,
+      "date": "2025-11-24T00:00:00"
+    },
+    {
+      "id": 49,
+      "member": "WAFFO MAURICE",
+      "amount": 2120000,
+      "date": "2025-11-24T00:00:00"
+    },
+    {
+      "id": 50,
+      "member": "TALLA VALENTIN",
+      "amount": 3180000,
+      "date": "2025-11-27T00:00:00"
+    },
+    {
+      "id": 51,
+      "member": "PALO VALENTIN",
+      "amount": 2600000,
+      "date": "2026-02-16T00:00:00"
+    },
+    {
+      "id": 52,
+      "member": "TAMPOLLA SERGE",
+      "amount": 1590000,
+      "date": "2026-02-23T00:00:00"
+    },
+    {
+      "id": 53,
+      "member": "WAFFO MAURICE",
+      "amount": 2120000,
+      "date": "2026-02-28T00:00:00"
+    },
+    {
+      "id": 54,
+      "member": "TALLA VALENTIN",
+      "amount": 3180000,
+      "date": "2026-03-12T00:00:00"
+    },
+    {
+      "id": 55,
+      "member": "FONGANG JEAN NOEL",
+      "amount": 2120000,
+      "date": "2026-04-01T00:00:00"
+    }
+  ],
+  "settings": {
+    "rate1": 0.02,
+    "rate2": 0.04,
+    "rate3": 0.02,
+    "duration": 3
+  }
+}

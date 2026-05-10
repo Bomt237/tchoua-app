@@ -1,0 +1,1490 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  phone           String?   @unique
+  name            String
+  password        String
+  avatar          String?
+  bio             String?
+  profession      String?
+  location        String?
+  familyInfo      String?   // JSON: { firstSpouseName, fatherName, motherName, childrenCount }
+  emergencyContact String?  // JSON: { name, phone, relationship }
+  language        String    @default("fr")
+  isVerified      Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  role            String    @default("MEMBER") // Legacy, to be phased out by systemRole
+  systemRoleId    String?
+  systemRole      SystemRole? @relation(fields: [systemRoleId], references: [id])
+  score           Int       @default(0)
+  level           String    @default("NOVICE")
+  referralCode    String    @unique @default(cuid())
+  referredById    String?
+  referredBy      User?     @relation("Referrals", fields: [referredById], references: [id])
+  referrals       User[]    @relation("Referrals")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  memberships           Membership[]
+  contributions         Contribution[]
+  loans                 Loan[]             @relation("LoanBorrower")
+  approvedLoans         Loan[]             @relation("LoanApprover")
+  socialAids            SocialAid[]        @relation("AidRequester")
+  notifications         Notification[]
+  badges                UserBadge[]
+  sentTransfers         Transfer[]         @relation("TransferSender")
+  receivedTransfers     Transfer[]         @relation("TransferReceiver")
+  scoringRecords        ScoringRecord[]
+  auditLogs             AuditLog[]
+  messages              Message[]
+  messageReactions      MessageReaction[]
+  savingsGoals          SavingsGoal[]
+  investments           Investment[]
+  marketplaceListings   MarketplaceListing[]
+  groupOrderItems       GroupOrderItem[]
+  groupOrders           GroupOrder[]       @relation("OrderInitiator")
+  culturalEventAttendees CulturalEventAttendee[]
+  aiConversations       AiConversation[]
+  sessionBenefits       SessionBeneficiary[]
+  caisseLoansBorrow     CaisseLoan[]       @relation("CaisseLoanBorrower")
+  // ── Multi-Association ──
+  associationsCreated   Association[]      @relation("AssociationCreator")
+  assocMemberships      AssociationMembership[]
+  templatesCreated      AssociationTemplate[] @relation("TemplateCreator")
+  templateRatings       TemplateRating[]
+  wallet                Wallet?
+
+  @@map("users")
+}
+
+model SystemRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions SystemPermission[]
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_roles")
+}
+
+model SystemPermission {
+  id          String   @id @default(cuid())
+  resource    String   // USERS, ASSOCIATIONS, TRANSACTIONS, etc.
+  action      String   // CREATE, READ, UPDATE, DELETE
+  roles       SystemRole[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([resource, action])
+  @@map("system_permissions")
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   // JSON string
+  description String?
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LEGACY TONTINE MODEL (kept for backward compatibility)
+// ═══════════════════════════════════════════════════════════════════════════
+
+model Tontine {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?
+  type              String    @default("ROSCA")
+  currency          String    @default("FCFA")
+  status            String    @default("ACTIVE")
+  isPublic          Boolean   @default(false)
+  maxMembers        Int       @default(20)
+  contributionAmount Float    @default(0)
+  contributionUnit  String    @default("CASH")
+  frequency         String    @default("MONTHLY")
+  rules             String?
+  logo              String?
+  region            String?
+  language          String    @default("fr")
+  frequencyConfig   String?
+  partAmount        Float?
+  allocationMethod  String    @default("FIXED")
+  allocationPercent Float?
+  maxPartsPerSession Int      @default(1)
+  caisseBalance     Float     @default(0)
+  caisseLoanRate    Float     @default(0)
+  caisseLoanDuration Int      @default(1)
+  bureauConfig      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  memberships           Membership[]
+  sessions              Session[]
+  contributions         Contribution[]
+  loans                 Loan[]
+  socialAids            SocialAid[]
+  products              Product[]
+  documents             Document[]
+  auditLogs             AuditLog[]
+  chatChannels          ChatChannel[]
+  messages              Message[]      @relation("TontineMessages")
+  accounts              TontineAccount[]
+  savingsGoals          SavingsGoal[]
+  investments           Investment[]
+  marketplaceListings   MarketplaceListing[]
+  groupOrders           GroupOrder[]
+  culturalEvents        CulturalEvent[]
+  sessionBeneficiaries  SessionBeneficiary[]
+  caisseEntries         CaisseEntry[]
+  caisseLoanss          CaisseLoan[]
+
+  @@map("tontines")
+}
+
+model Membership {
+  id          String    @id @default(cuid())
+  userId      String
+  tontineId   String
+  role        String    @default("MEMBER")
+  status      String    @default("PENDING")
+  joinedAt    DateTime?
+  leftAt      DateTime?
+  sponsorId   String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id])
+  tontine     Tontine   @relation(fields: [tontineId], references: [id])
+
+  @@unique([userId, tontineId])
+  @@map("memberships")
+}
+
+model Session {
+  id            String    @id @default(cuid())
+  tontineId     String
+  sessionNumber Int
+  startDate     DateTime
+  endDate       DateTime?
+  beneficiaryId String?
+  amount        Float
+  unit          String    @default("CASH")
+  status        String    @default("UPCOMING")
+  notes         String?
+  drawMethod    String    @default("RANDOM")
+  potAmount     Float?
+  reliquatAmount Float    @default(0)
+  caisseInAmount Float    @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tontine       Tontine   @relation(fields: [tontineId], references: [id])
+  contributions Contribution[]
+  beneficiaries SessionBeneficiary[]
+  caisseEntries CaisseEntry[]
+
+  @@map("sessions")
+}
+
+model Contribution {
+  id            String    @id @default(cuid())
+  userId        String
+  tontineId     String
+  sessionId     String?
+  amount        Float
+  unit          String    @default("CASH")
+  status        String    @default("PENDING")
+  type          String    @default("COTISATION")
+  paymentMethod String?
+  reference     String?
+  productId     String?
+  productQty    Float?
+  serviceHours  Float?
+  notes         String?
+  paidAt        DateTime?
+  dueAt         DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id])
+  tontine       Tontine   @relation(fields: [tontineId], references: [id])
+  session       Session?  @relation(fields: [sessionId], references: [id])
+  product       Product?  @relation(fields: [productId], references: [id])
+
+  @@map("contributions")
+}
+
+model Loan {
+  id            String    @id @default(cuid())
+  borrowerId    String
+  tontineId     String
+  approverId    String?
+  amount        Float
+  interestRate  Float     @default(0)
+  duration      Int
+  purpose       String?
+  status        String    @default("PENDING")
+  disbursedAt   DateTime?
+  dueDate       DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  borrower      User      @relation("LoanBorrower", fields: [borrowerId], references: [id])
+  tontine       Tontine   @relation(fields: [tontineId], references: [id])
+  approver      User?     @relation("LoanApprover", fields: [approverId], references: [id])
+  repayments    LoanRepayment[]
+
+  @@map("loans")
+}
+
+model LoanRepayment {
+  id            String    @id @default(cuid())
+  loanId        String
+  amount        Float
+  paymentMethod String?
+  reference     String?
+  paidAt        DateTime  @default(now())
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  loan          Loan      @relation(fields: [loanId], references: [id])
+
+  @@map("loan_repayments")
+}
+
+model SocialAid {
+  id              String    @id @default(cuid())
+  requesterId     String
+  tontineId       String
+  type            String
+  description     String
+  cashAmount      Float     @default(0)
+  natureDetails   String?
+  serviceDetails  String?
+  status          String    @default("PENDING")
+  isAnonymous     Boolean   @default(false)
+  urgencyLevel    String    @default("NORMAL")
+  disbursedAt     DateTime?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  requester       User      @relation("AidRequester", fields: [requesterId], references: [id])
+  tontine         Tontine   @relation(fields: [tontineId], references: [id])
+
+  @@map("social_aids")
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  tontineId   String
+  name        String
+  description String?
+  category    String
+  unit        String
+  priceRef    Float?
+  gradeA      String?
+  gradeB      String?
+  season      String?
+  image       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tontine     Tontine   @relation(fields: [tontineId], references: [id])
+  contributions Contribution[]
+
+  @@map("products")
+}
+
+model Transfer {
+  id            String    @id @default(cuid())
+  senderId      String
+  receiverId    String
+  amount        Float
+  currency      String    @default("FCFA")
+  paymentMethod String?
+  reference     String?
+  status        String    @default("PENDING")
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sender        User      @relation("TransferSender", fields: [senderId], references: [id])
+  receiver      User      @relation("TransferReceiver", fields: [receiverId], references: [id])
+
+  @@map("transfers")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String
+  isRead    Boolean   @default(false)
+  link      String?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model Badge {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String
+  icon        String
+  category    String
+  requirement String
+  points      Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  userBadges  UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id])
+  badge    Badge    @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model ScoringRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  points    Int
+  reason    String
+  category  String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("scoring_records")
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  tontineId    String
+  name         String
+  type         String
+  url          String
+  mimeType     String?
+  fileSize     Int?
+  isPublic     Boolean  @default(true)
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  tontine      Tontine  @relation(fields: [tontineId], references: [id])
+
+  @@map("documents")
+}
+
+model TontineAccount {
+  id             String   @id @default(cuid())
+  tontineId      String
+  label          String
+  type           String   @default("BANK")
+  bankName       String?
+  accountNumber  String?
+  accountHolder  String?
+  iban           String?
+  bic            String?
+  mobileNumber   String?
+  mobileOperator String?
+  isDefault      Boolean  @default(false)
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tontine        Tontine  @relation(fields: [tontineId], references: [id])
+
+  @@map("tontine_accounts")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  tontineId String?
+  action    String
+  entity    String
+  entityId  String?
+  changes   String?
+  details   String?  // Description lisible pour la console admin
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+  tontine   Tontine? @relation(fields: [tontineId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model ChatChannel {
+  id          String    @id @default(cuid())
+  tontineId   String
+  name        String
+  description String?
+  type        String    @default("PUBLIC")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tontine     Tontine   @relation(fields: [tontineId], references: [id])
+  messages    Message[]
+
+  @@map("chat_channels")
+}
+
+model Message {
+  id          String    @id @default(cuid())
+  channelId   String?
+  tontineId   String
+  senderId    String
+  content     String
+  type        String    @default("TEXT")
+  mediaUrl    String?
+  replyToId   String?
+  isDeleted   Boolean   @default(false)
+  editedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  channel     ChatChannel? @relation(fields: [channelId], references: [id])
+  tontine     Tontine      @relation("TontineMessages", fields: [tontineId], references: [id])
+  sender      User         @relation(fields: [senderId], references: [id])
+  replyTo     Message?     @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     Message[]    @relation("MessageReplies")
+  reactions   MessageReaction[]
+
+  @@map("messages")
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message   Message  @relation(fields: [messageId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId, emoji])
+  @@map("message_reactions")
+}
+
+model SavingsGoal {
+  id            String    @id @default(cuid())
+  userId        String
+  tontineId     String?
+  name          String
+  description   String?
+  targetAmount  Float
+  currentAmount Float     @default(0)
+  currency      String    @default("FCFA")
+  deadline      DateTime?
+  type          String    @default("PERSONAL")
+  category      String    @default("OTHER")
+  status        String    @default("ACTIVE")
+  icon          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id])
+  tontine       Tontine?  @relation(fields: [tontineId], references: [id])
+  contributions SavingsContribution[]
+
+  @@map("savings_goals")
+}
+
+model SavingsContribution {
+  id          String      @id @default(cuid())
+  goalId      String
+  amount      Float
+  notes       String?
+  createdAt   DateTime    @default(now())
+
+  goal        SavingsGoal @relation(fields: [goalId], references: [id])
+
+  @@map("savings_contributions")
+}
+
+model Investment {
+  id              String    @id @default(cuid())
+  tontineId       String
+  proposerId      String
+  title           String
+  description     String?
+  type            String    @default("PROJECT")
+  targetAmount    Float
+  currentAmount   Float     @default(0)
+  expectedReturn  Float?
+  duration        Int?
+  status          String    @default("PROPOSED")
+  votesFor        Int       @default(0)
+  votesAgainst    Int       @default(0)
+  startDate       DateTime?
+  endDate         DateTime?
+  milestones      String?
+  returns         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tontine         Tontine   @relation(fields: [tontineId], references: [id])
+  proposer        User      @relation(fields: [proposerId], references: [id])
+
+  @@map("investments")
+}
+
+model MarketplaceListing {
+  id          String    @id @default(cuid())
+  sellerId    String
+  tontineId   String?
+  title       String
+  description String?
+  category    String    @default("PRODUIT")
+  price       Float
+  unit        String    @default("unité")
+  quantity    Float?
+  images      String?
+  location    String?
+  status      String    @default("ACTIVE")
+  type        String    @default("VENTE")
+  isGroupBuy  Boolean   @default(false)
+  minGroupQty Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  seller      User      @relation(fields: [sellerId], references: [id])
+  tontine     Tontine?  @relation(fields: [tontineId], references: [id])
+  orderItems  GroupOrderItem[]
+
+  @@map("marketplace_listings")
+}
+
+model GroupOrder {
+  id              String    @id @default(cuid())
+  tontineId       String
+  initiatorId     String
+  listingId       String?
+  title           String
+  description     String?
+  status          String    @default("OPEN")
+  deadline        DateTime?
+  targetQty       Float?
+  currentQty      Float     @default(0)
+  unitPrice       Float
+  discountPct     Float     @default(0)
+  totalAmount     Float     @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tontine         Tontine   @relation(fields: [tontineId], references: [id])
+  initiator       User      @relation("OrderInitiator", fields: [initiatorId], references: [id])
+  items           GroupOrderItem[]
+
+  @@map("group_orders")
+}
+
+model GroupOrderItem {
+  id          String     @id @default(cuid())
+  orderId     String
+  listingId   String?
+  userId      String
+  quantity    Float
+  unitPrice   Float
+  totalPrice  Float
+  status      String     @default("PENDING")
+  notes       String?
+  createdAt   DateTime   @default(now())
+
+  order       GroupOrder @relation(fields: [orderId], references: [id])
+  listing     MarketplaceListing? @relation(fields: [listingId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+
+  @@map("group_order_items")
+}
+
+model CulturalEvent {
+  id            String    @id @default(cuid())
+  tontineId     String
+  title         String
+  description   String?
+  type          String    @default("REUNION")
+  startDate     DateTime
+  endDate       DateTime?
+  location      String?
+  budget        Float?
+  actualCost    Float?
+  status        String    @default("PLANNED")
+  isVirtual     Boolean   @default(false)
+  meetingLink   String?
+  maxAttendees  Int?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tontine       Tontine   @relation(fields: [tontineId], references: [id])
+  attendees     CulturalEventAttendee[]
+
+  @@map("cultural_events")
+}
+
+model CulturalEventAttendee {
+  id        String        @id @default(cuid())
+  eventId   String
+  userId    String
+  status    String        @default("INVITED")
+  notes     String?
+  createdAt DateTime      @default(now())
+
+  event     CulturalEvent @relation(fields: [eventId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+  @@map("cultural_event_attendees")
+}
+
+model AiConversation {
+  id        String      @id @default(cuid())
+  userId    String
+  tontineId String?
+  title     String?
+  messages  AiMessage[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  createdAt      DateTime       @default(now())
+
+  conversation   AiConversation @relation(fields: [conversationId], references: [id])
+
+  @@map("ai_messages")
+}
+
+model SessionBeneficiary {
+  id          String   @id @default(cuid())
+  sessionId   String
+  tontineId   String
+  userId      String
+  partsCount  Float    @default(1)
+  amount      Float
+  paidAt      DateTime?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  session     Session  @relation(fields: [sessionId], references: [id])
+  tontine     Tontine  @relation(fields: [tontineId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("session_beneficiaries")
+}
+
+model CaisseEntry {
+  id          String   @id @default(cuid())
+  tontineId   String
+  sessionId   String?
+  type        String
+  amount      Float
+  description String?
+  createdAt   DateTime @default(now())
+
+  tontine     Tontine  @relation(fields: [tontineId], references: [id])
+  session     Session? @relation(fields: [sessionId], references: [id])
+
+  @@map("caisse_entries")
+}
+
+model CaisseLoan {
+  id           String    @id @default(cuid())
+  tontineId    String
+  borrowerId   String
+  amount       Float
+  interestRate Float     @default(0)
+  duration     Int       @default(1)
+  totalDue     Float
+  status       String    @default("ACTIVE")
+  startSessionId String?
+  dueSessionId   String?
+  repaidAt     DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
+
+  tontine      Tontine   @relation(fields: [tontineId], references: [id])
+  borrower     User      @relation("CaisseLoanBorrower", fields: [borrowerId], references: [id])
+
+  @@map("caisse_loans")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NOUVEAU MODÈLE MULTI-ASSOCIATIONS (CdC V9)
+// Architecture : Association → Activités → Sessions → Cotisations
+// ═══════════════════════════════════════════════════════════════════════════
+
+model Association {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  // TONTINE_CLUB, COOPERATIVE, SOLIDARITY, INVESTMENT, AGRICULTURAL, MUTUAL, OTHER
+  type          String   @default("TONTINE_CLUB")
+  status        String   @default("ACTIVE")  // ACTIVE, SUSPENDED, DISSOLVED
+  isPublic      Boolean  @default(false)
+  color         String   @default("#0d3d28")
+  logo          String?
+  region        String?
+  website       String?
+  email         String?
+  phone         String?
+  // Association Parent (Hiérarchie)
+  parentId      String?
+  parent        Association? @relation("AssociationHierarchy", fields: [parentId], references: [id])
+  children      Association[] @relation("AssociationHierarchy")
+  parentSubscriptionFee Float?
+
+  // Template pré-configuré utilisé
+  templateUsed    String?  // A30, NDI_MBE, AMSED, BLANK
+  // Référence au modèle système ou communautaire ayant servi à créer l'association
+  templateId      String?
+  template        AssociationTemplate? @relation(fields: [templateId], references: [id])
+
+  // Règlement intérieur
+  reglementHtml String?
+  reglementUrl  String?
+
+  // Bureau (JSON: { president, vicePresident, secretaires[], tresorier, ... })
+  bureauConfig  String?
+
+  // Conditions d'adhésion (JSON)
+  membershipConfig String?
+  meetingConfig String?
+  socialAidCaps String?
+  sanctionsConfig String?
+  bankConfig    String?
+
+  creatorId     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  creator       User     @relation("AssociationCreator", fields: [creatorId], references: [id])
+  memberships   AssociationMembership[]
+  activities    AssociationActivity[]
+  meetings      AssocMeeting[]
+  documents     AssocDocument[]
+  accounts      AssocBankAccount[]
+  socialAidReqs AssocSocialAidRequest[]
+  assocMessages AssocMessage[]
+  customRoles   AssociationCustomRole[]
+  regulations   AssociationRegulationArticle[]
+
+  @@map("associations")
+}
+
+model AssociationMembership {
+  id              String    @id @default(cuid())
+  userId          String
+  associationId   String
+  // MEMBER, PRESIDENT, VICE_PRESIDENT, SECRETARY, SECRETARY_ADJ,
+  // TREASURER, TREASURER_ADJ, SOLIDARITY_OFFICER, NATURE_OFFICER,
+  // AUDITOR, CENSOR, ADVISOR, FOUNDER
+  role            String    @default("MEMBER")
+  status          String    @default("PENDING")  // PENDING, ACTIVE, SUSPENDED, LEFT
+  joinedAt        DateTime?
+  leftAt          DateTime?
+  sponsorId       String?
+  reliabilityScore Float    @default(100)  // 0-100, fiabilité
+  memberNumber    String?   // numéro d'ordre dans l'association
+  excessBalance   Float     @default(0)    // Excédent (reliquat non alloué)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id])
+  association     Association @relation(fields: [associationId], references: [id])
+  activitySubs    ActivitySubscription[]
+  meetingAttendances AssocMeetingAttendance[]
+  meetingFines    AssocMeetingFine[]
+  loans           AssocLoan[]
+  contributions   ActivityContribution[]
+  beneficiaries   ActivityBeneficiary[]
+  socialAids      AssocSocialAidRequest[]
+  messages        AssocMessage[]
+  sessionContributions AssocSessionContribution[]
+  sanctions       AssocSanction[]
+  waiverRequests  AssocWaiverRequest[]
+  regulationApprovals MembershipRegulationApproval[]
+
+  // Rôle personnalisé optionnel (cumulatif avec role de base)
+  customRoleId    String?
+  customRole      AssociationCustomRole? @relation(fields: [customRoleId], references: [id])
+
+  @@unique([userId, associationId])
+  @@map("association_memberships")
+}
+
+model AssociationRegulationArticle {
+  id            String   @id @default(cuid())
+  associationId String
+  articleNumber Int
+  title         String?
+  content       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  association   Association @relation(fields: [associationId], references: [id])
+  approvals     MembershipRegulationApproval[]
+
+  @@map("assoc_regulation_articles")
+}
+
+model MembershipRegulationApproval {
+  id           String   @id @default(cuid())
+  membershipId String
+  articleId    String
+  approvedAt   DateTime @default(now())
+
+  membership   AssociationMembership @relation(fields: [membershipId], references: [id])
+  article      AssociationRegulationArticle @relation(fields: [articleId], references: [id])
+
+  @@unique([membershipId, articleId])
+  @@map("membership_regulation_approvals")
+}
+
+model AssociationCustomRole {
+  id            String   @id @default(cuid())
+  associationId String
+  name          String
+  color         String   @default("#0d3d28")
+  // JSON array de permissions: ["EDIT_SETTINGS", "INVITE_MEMBERS", ...]
+  permissions   String   @default("[]")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  association   Association             @relation(fields: [associationId], references: [id], onDelete: Cascade)
+  memberships   AssociationMembership[]
+
+  @@unique([associationId, name])
+  @@map("association_custom_roles")
+}
+
+// ─── Activités au sein d'une Association ───────────────────────────────────
+
+model AssociationActivity {
+  id              String   @id @default(cuid())
+  associationId   String
+  name            String
+  description     String?
+  // TONTINE_ROTATIVE, TONTINE_ASCA, TONTINE_ENCHERES, EPARGNE,
+  // AIDE_SOLIDAIRE, PRET, NATURE, INVESTISSEMENT, ACHATS_GROUPES, COLLECTION
+  type            String
+  status          String   @default("ACTIVE")  // ACTIVE, PAUSED, CLOSED
+  // MANDATORY, OPTIONAL, CONDITIONAL
+  participation   String   @default("MANDATORY")
+  conditionMonths Int?     // ancienneté requise si CONDITIONAL
+
+  // Contribution
+  contributionAmount    Float?
+  contributionUnit      String  @default("CASH")  // CASH, NATURE, TIME
+  // WEEKLY, BIWEEKLY, MONTHLY, QUARTERLY, SEMIANNUAL, ANNUAL, PER_SESSION
+  contributionFrequency String  @default("MONTHLY")
+
+  // Distribution (pour tontines)
+  // ROTATION, LOTTERY_MONTHLY, LOTTERY_UNIQUE, AUCTION, MERIT, NEED, HYBRID
+  distributionMode      String  @default("ROTATION")
+  auctionMinBidPct      Float?  // % du pot comme mise à prix (ex: 5%)
+  auctionMinBidders     Int?    // palier minimum de participants aux enchères
+  rotationOrder         String? // JSON: [memberId, ...] ordre de rotation irrevocable
+
+  // Config fréquence JSON (FrequencyConfig)
+  frequencyConfig   String?
+
+  // Système de parts
+  partAmount        Float?
+  maxPartsPerSession Int   @default(1)
+
+  // Caisse
+  caisseBalance     Float  @default(0)
+  caisseLoanRate    Float  @default(0)
+  caisseLoanDuration Int   @default(1)
+
+  // Règles de prêts (pour PRET)
+  loanRate1         Float? // taux mois 1-3 (ex: 2%)
+  loanRate2         Float? // taux mois >3 (ex: 4%)
+  loanMaxPerMember  String? // JSON: {type:AMOUNT|PCT_TREASURY, value:float}
+  loanApprovalMode  String  @default("BUREAU") // BUREAU, SECRETARIAT, AUTO
+  loanMaxActive     Int     @default(1) // prêts actifs max par membre
+
+  // Pénalités
+  penaltyLateAmount  Float?
+  penaltyLatePercent Float?
+  penaltyGraceDays   Int?
+  maxRetards         Int?   // retards avant exclusion
+
+  // Modes de paiement acceptés (JSON: ["CASH","MOBILE_MONEY","BANK","NATURE","TIME"])
+  paymentMethods    String  @default("CASH")
+
+  // Catalogue nature (JSON pour NATURE)
+  natureCatalog     String?
+
+  // Pour COLLECTION
+  collectionAmount  Float?  // montant fixe par séance
+
+  sortOrder         Int     @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  association       Association @relation(fields: [associationId], references: [id])
+  subscriptions     ActivitySubscription[]
+  actSessions       ActivitySession[]
+  actContributions  ActivityContribution[]
+  loans             AssocLoan[]
+  sanctions         AssocSanction[]
+  waiverRequests    AssocWaiverRequest[]
+
+  @@map("association_activities")
+}
+
+model ActivitySubscription {
+  id              String   @id @default(cuid())
+  membershipId    String
+  activityId      String
+  // ACTIVE, PAUSED, PENDING_CANCEL
+  status          String   @default("ACTIVE")
+  partsCount      Int      @default(1)
+  // Clé de répartition personnalisée pour les activités optionnelles partielles (Priorité 4)
+  // FIXED, PERCENTAGE, RESIDUAL, NONE
+  allocationType  String   @default("NONE")
+  allocationValue Float?
+  subscribedAt    DateTime @default(now())
+  cancelledAt     DateTime?
+
+  membership      AssociationMembership @relation(fields: [membershipId], references: [id])
+  activity        AssociationActivity   @relation(fields: [activityId], references: [id])
+
+  @@unique([membershipId, activityId])
+  @@map("activity_subscriptions")
+}
+
+model ActivitySession {
+  id            String   @id @default(cuid())
+  activityId    String
+  sessionNumber Int
+  scheduledAt   DateTime
+  heldAt        DateTime?
+  status        String   @default("UPCOMING")  // UPCOMING, HELD, CANCELLED
+  potAmount     Float?
+  distributed   Float    @default(0)
+  reliquat      Float    @default(0)
+  drawMethod    String   @default("ROTATION")
+  // JSON: [{ membershipId, amount, partsCount }]
+  drawResult    String?
+  // JSON: { winner, bidAmount, bidders: [...] }
+  auctionResult String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  activity      AssociationActivity @relation(fields: [activityId], references: [id])
+  contributions ActivityContribution[]
+  beneficiaries ActivityBeneficiary[]
+
+  @@map("activity_sessions")
+}
+
+model ActivityContribution {
+  id            String   @id @default(cuid())
+  activityId    String
+  sessionId     String?
+  membershipId  String
+  amount        Float
+  unit          String   @default("CASH")
+  status        String   @default("PENDING")  // PENDING, PAID, LATE, EXCUSED
+  paymentMethod String?  // CASH, MOBILE_MONEY, BANK, NATURE, TIME
+  reference     String?
+  receiptUrl    String?  // photo du reçu
+  paidAt        DateTime?
+  dueAt         DateTime?
+  lateFeePaid   Float?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  activity      AssociationActivity   @relation(fields: [activityId], references: [id])
+  session       ActivitySession?      @relation(fields: [sessionId], references: [id])
+  membership    AssociationMembership @relation(fields: [membershipId], references: [id])
+
+  @@map("activity_contributions")
+}
+
+model ActivityBeneficiary {
+  id           String          @id @default(cuid())
+  sessionId    String
+  membershipId String
+  partsCount   Float           @default(1)
+  amount       Float
+  paidAt       DateTime?
+  deliveryPhotoUrl String?     // pour tontines nature
+  deliveryGeoLat   Float?
+  deliveryGeoLng   Float?
+  signatureUrl     String?
+  notes        String?
+  createdAt    DateTime        @default(now())
+
+  session      ActivitySession       @relation(fields: [sessionId], references: [id])
+  membership   AssociationMembership @relation(fields: [membershipId], references: [id])
+
+  @@map("activity_beneficiaries")
+}
+
+// ─── Réunions ─────────────────────────────────────────────────────────────
+
+model AssocMeeting {
+  id              String   @id @default(cuid())
+  associationId   String
+  title           String?
+  // REGULAR, EXTRAORDINARY, AG_ORDINARY, AG_EXTRAORDINARY
+  type            String   @default("REGULAR")
+  scheduledAt     DateTime
+  location        String?
+  isRotating      Boolean  @default(false)
+  hostMembershipId String?
+  status          String   @default("PLANNED")  // PLANNED, HELD, CANCELLED
+  quorumRequired  Int?     // pourcentage minimum
+  quorumReached   Boolean  @default(false)
+  attendeeCount   Int?
+  minutesUrl      String?
+  notes           String?
+  agenda          String?  // JSON: [{ title, duration, presenter }]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  association   Association @relation(fields: [associationId], references: [id])
+  attendances   AssocMeetingAttendance[]
+  fines         AssocMeetingFine[]
+  sessionContributions AssocSessionContribution[]
+  sanctions     AssocSanction[]
+  waiverRequests AssocWaiverRequest[]
+
+  @@map("assoc_meetings")
+}
+
+model AssocMeetingAttendance {
+  id           String   @id @default(cuid())
+  meetingId    String
+  membershipId String
+  // PRESENT, LATE, ABSENT, EXCUSED
+  status       String   @default("ABSENT")
+  arrivedAt    DateTime?
+  justification String?
+  createdAt    DateTime @default(now())
+
+  meeting    AssocMeeting          @relation(fields: [meetingId], references: [id])
+  membership AssociationMembership @relation(fields: [membershipId], references: [id])
+
+  @@unique([meetingId, membershipId])
+  @@map("assoc_meeting_attendances")
+}
+
+model AssocMeetingFine {
+  id           String   @id @default(cuid())
+  meetingId    String
+  membershipId String
+  // ABSENT, LATE, INDISCIPLINE, MISSED_COMMISSION, ABSENT_AG
+  reason       String
+  amount       Float
+  paid         Boolean  @default(false)
+  paidAt       DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  meeting    AssocMeeting          @relation(fields: [meetingId], references: [id])
+  membership AssociationMembership @relation(fields: [membershipId], references: [id])
+
+  @@map("assoc_meeting_fines")
+}
+
+// ─── Aides Sociales (avec plafonds par catégorie) ─────────────────────────
+
+model AssocSocialAidRequest {
+  id              String   @id @default(cuid())
+  associationId   String
+  membershipId    String
+  // ILLNESS_MEMBER, ILLNESS_SPOUSE, DEATH_MEMBER, DEATH_SPOUSE,
+  // DEATH_CHILD_UNDER5, DEATH_CHILD_OVER5, DEATH_PARENT,
+  // MARRIAGE, BIRTH, BIRTH_TWINS, OTHER
+  category        String
+  requestedAmount Float
+  approvedAmount  Float?
+  status          String   @default("PENDING")  // PENDING, APPROVED, PAID, REJECTED
+  justification   String?
+  documentUrl     String?
+  urgencyLevel    String   @default("NORMAL")   // NORMAL, URGENT, CRITICAL
+  approvedAt      DateTime?
+  approvedById    String?
+  paidAt          DateTime?
+  rejectedReason  String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  association     Association           @relation(fields: [associationId], references: [id])
+  membership      AssociationMembership @relation(fields: [membershipId], references: [id])
+
+  @@map("assoc_social_aid_requests")
+}
+
+// ─── Documents de l'Association ───────────────────────────────────────────
+
+model AssocDocument {
+  id              String   @id @default(cuid())
+  associationId   String
+  name            String
+  // REGLEMENT, STATUT, PV_REUNION, RAPPORT_TRESORIER, RAPPORT_COMMISSAIRES,
+  // BILAN_ANNUEL, BILAN_ACTIVITE, AUTRE
+  type            String   @default("AUTRE")
+  url             String
+  mimeType        String?
+  fileSize        Int?
+  isPublic        Boolean  @default(true)
+  uploadedById    String?
+  relatedMeetingId String?
+  createdAt       DateTime @default(now())
+
+  association     Association @relation(fields: [associationId], references: [id])
+
+  @@map("assoc_documents")
+}
+
+// ─── Comptes Bancaires de l'Association ───────────────────────────────────
+
+model AssocBankAccount {
+  id              String   @id @default(cuid())
+  associationId   String
+  label           String
+  type            String   @default("BANK")  // BANK, MOBILE_MONEY, CASH
+  bankName        String?
+  accountNumber   String?
+  accountHolder   String?
+  iban            String?
+  bic             String?
+  mobileNumber    String?
+  mobileOperator  String?  // MTN, ORANGE, WAVE, EXPRESS_UNION
+  isDefault       Boolean  @default(false)
+  signatories     String?  // JSON: [memberId, ...]
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  association     Association @relation(fields: [associationId], references: [id])
+
+  @@map("assoc_bank_accounts")
+}
+
+// ─── Phase C: Gestion des Sessions de Réunion ─────────────────────────────
+
+model AssocSessionContribution {
+  id              String   @id @default(cuid())
+  meetingId       String
+  membershipId    String
+  totalAmount     Float
+  cashAmount      Float    @default(0)
+  mobileMoneyAmount Float  @default(0)
+  bankTransferAmount Float @default(0)
+  status          String   @default("PENDING") // PENDING, ALLOCATED
+  receiptId       String?
+  paidAt          DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  meeting         AssocMeeting          @relation(fields: [meetingId], references: [id])
+  membership      AssociationMembership @relation(fields: [membershipId], references: [id])
+
+  @@map("assoc_session_contributions")
+}
+
+model AssocSanction {
+  id            String   @id @default(cuid())
+  meetingId     String
+  membershipId  String
+  activityId    String?
+  failureType   String   // OBLIGATORY_TOTAL, OBLIGATORY_PARTIAL, REPAYMENT
+  penaltyAmount Float
+  description   String?
+  status        String   @default("PENDING") // PENDING, APPLIED, WAIVED
+  appliedBy     String?  // SYSTEM or userId
+  appliedAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  meeting       AssocMeeting          @relation(fields: [meetingId], references: [id])
+  membership    AssociationMembership @relation(fields: [membershipId], references: [id])
+  activity      AssociationActivity?  @relation(fields: [activityId], references: [id])
+
+  @@map("assoc_sanctions")
+}
+
+model AssocWaiverRequest {
+  id            String   @id @default(cuid())
+  meetingId     String
+  membershipId  String
+  activityId    String?
+  reason        String
+  status        String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED
+  decisionReason String?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  meeting       AssocMeeting          @relation(fields: [meetingId], references: [id])
+  membership    AssociationMembership @relation(fields: [membershipId], references: [id])
+  activity      AssociationActivity?  @relation(fields: [activityId], references: [id])
+
+  @@map("assoc_waiver_requests")
+}
+
+// ─── Modèles d'Association (Templates) ────────────────────────────────────
+
+model AssociationTemplate {
+  id              String   @id @default(cuid())
+  name            String
+  description     String
+  // TONTINE, FAMILLE, COMMERCE, VILLAGE, PROJET, RELIGIEUX, EPARGNE
+  category        String   @default("TONTINE")
+  // SYSTEM, COMMUNITY, PRIVATE
+  origin          String   @default("SYSTEM")
+  // PUBLIC, PRIVATE, PENDING_REVIEW
+  visibility      String   @default("PUBLIC")
+  targetAudience  String?
+  reglementHtml   String?
+  usageCount      Int      @default(0)
+  rating          Float    @default(0)
+  ratingCount     Int      @default(0)
+  iconEmoji       String   @default("🏦")
+  color           String   @default("#0d3d28")
+  creatorId       String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  creator         User?    @relation("TemplateCreator", fields: [creatorId], references: [id])
+  activities      TemplateActivity[]
+  associations    Association[]
+  ratings         TemplateRating[]
+
+  @@map("association_templates")
+}
+
+model TemplateActivity {
+  id                    String  @id @default(cuid())
+  templateId            String
+  name                  String
+  description           String?
+  type                  String
+  participation         String  @default("MANDATORY")
+  contributionAmount    Float?
+  contributionFrequency String  @default("MONTHLY")
+  distributionMode      String  @default("ROTATION")
+  penaltyLateAmount     Float?
+  penaltyLatePercent    Float?
+  sortOrder             Int     @default(0)
+  isDefaultEnabled      Boolean @default(true)
+  // Documentation pédagogique
+  docObjective          String? // Quel est l'objectif ?
+  docImportance         String? // Pourquoi est-elle importante ?
+  docTips               String? // Conseils de gestion
+  docPitfalls           String? // Pièges à éviter
+
+  template              AssociationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("template_activities")
+}
+
+model TemplateRating {
+  id          String   @id @default(cuid())
+  templateId  String
+  userId      String
+  rating      Int      // 1-5
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  template    AssociationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id])
+
+  @@unique([templateId, userId])
+  @@map("template_ratings")
+}
+
+// ─── Chat de l'Association ────────────────────────────────────────────────
+
+model AssocMessage {
+  id              String   @id @default(cuid())
+  associationId   String
+  membershipId    String
+  content         String
+  type            String   @default("TEXT")  // TEXT, IMAGE, DOCUMENT, SYSTEM, AUDIO
+  mediaUrl        String?
+  // GENERAL, BUREAU, ACTIVITY_activityId, ANNOUNCEMENTS
+  channel         String   @default("GENERAL")
+  replyToId       String?
+  isDeleted       Boolean  @default(false)
+  editedAt        DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  association     Association           @relation(fields: [associationId], references: [id])
+  membership      AssociationMembership @relation(fields: [membershipId], references: [id])
+
+  @@map("assoc_messages")
+}
+
+// ─── Prêts de l'Association (activité PRET) ───────────────────────────────
+
+model AssocLoan {
+  id              String   @id @default(cuid())
+  activityId      String
+  borrowerMembershipId String
+  amount          Float
+  // taux selon durée: ≤3 mois = loanRate1, >3 mois = loanRate2
+  interestRate    Float    @default(0)
+  duration        Int      // mois
+  totalDue        Float
+  purpose         String?
+  status          String   @default("PENDING")  // PENDING, APPROVED, ACTIVE, REPAID, DEFAULTED
+  approvedAt      DateTime?
+  approvedById    String?
+  disbursedAt     DateTime?
+  dueDate         DateTime?
+  repaidAt        DateTime?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  activity            AssociationActivity   @relation(fields: [activityId], references: [id])
+  borrowerMembership  AssociationMembership @relation(fields: [borrowerMembershipId], references: [id])
+  repayments          AssocLoanRepayment[]
+
+  @@map("assoc_loans")
+}
+
+model AssocLoanRepayment {
+  id            String    @id @default(cuid())
+  loanId        String
+  amount        Float
+  principal     Float?
+  interest      Float?
+  paymentMethod String?
+  reference     String?
+  paidAt        DateTime  @default(now())
+  notes         String?
+
+  loan          AssocLoan @relation(fields: [loanId], references: [id])
+
+  @@map("assoc_loan_repayments")
+}
+
+// ─── Score de fiabilité par membre et par activité ────────────────────────
+
+model MemberReliabilityScore {
+  id           String   @id @default(cuid())
+  membershipId String
+  activityId   String?
+  score        Float    // 0-100
+  lateCount    Int      @default(0)
+  absentCount  Int      @default(0)
+  punctualCount Int     @default(0)
+  votesParticipated Int @default(0)
+  lastCalculated DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@map("member_reliability_scores")
+}
+
+// ─── Langues personnalisées (multilangue extensible) ──────────────────────
+
+model AppLanguage {
+  id           String   @id @default(cuid())
+  code         String   @unique  // ex: "pt", "ar", "wo"
+  name         String              // ex: "Português", "العربية", "Wolof"
+  flag         String              // emoji drapeau
+  enabled      Boolean  @default(true)
+  // Tableau JSON des traductions, structure compatible avec translations.ts
+  // { nav: {...}, common: {...}, ... }
+  translations String              // JSON string
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("app_languages")
+}
+
+// ─── Module 12: Wallet Intégré (Portefeuille Électronique) ────────────────
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Float    @default(0)
+  currency  String   @default("FCFA")
+  status    String   @default("ACTIVE") // ACTIVE, SUSPENDED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id            String   @id @default(cuid())
+  walletId      String
+  amount        Float
+  feeAmount     Float    @default(0)
+  netAmount     Float    @default(0)
+  // DEPOSIT, WITHDRAWAL, TRANSFER_OUT, TRANSFER_IN, PAYMENT, RECEIPT
+  type          String
+  status        String   @default("COMPLETED") // PENDING, COMPLETED, FAILED, CANCELLED
+  reference     String?  // Ex: ID de transaction Mobile Money
+  description   String?
+  associationId String?  // Si lié à une association
+  relatedTxId   String?  // Pour relier un TRANSFER_OUT à un TRANSFER_IN
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wallet        Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@map("wallet_transactions")
+}

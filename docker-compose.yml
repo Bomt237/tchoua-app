@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tchoua_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://tchoua:tchoua123@db:5432/tchouadb?schema=public
+      - NEXTAUTH_SECRET=tchoua_super_secret_key_2024
+      - NEXTAUTH_URL=https://localhost
+    depends_on:
+      db:
+        condition: service_healthy
+    # Met à jour le schéma de la base de données avant de démarrer
+    command: sh -c "npx prisma db push && npm start"
+
+  db:
+    image: postgres:15-alpine
+    container_name: tchoua_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tchoua
+      POSTGRES_PASSWORD: tchoua123
+      POSTGRES_DB: tchouadb
+    ports:
+      - "5432:5432"
+    volumes:
+      - tchoua_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tchoua -d tchouadb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: tchoua_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - app
+
+volumes:
+  tchoua_pgdata:

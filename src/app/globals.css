@@ -1,26 +1,141 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FAF7F2;
+  --foreground: #1A1A1A;
+  --forest: #165E39;
+  --forest-dark: #0F3F26;
+  --forest-light: #2D8A5E;
+  --primary: var(--forest);
+  --primary-dark: var(--forest-dark);
+  --primary-light: var(--forest-light);
+  --secondary: #E38513;
+  --secondary-light: #F5A542;
+  --gold: #E38513;
+  --gold-light: #F5A542;
+  --teal: #0D7377;
+  --teal-light: #14A3A8;
+  --indigo: #3D2B5C;
+  --cream: #FAF7F2;
+  --warm-white: #FFFFFF;
+  --stone: #E8E2D9;
+  --charcoal: #1A1A1A;
+  --graphite: #4A4A4A;
+  --ash: #8A8A8A;
+  --dark-bg: #0F1A15;
+  --dark-surface: #162921;
+  --success: #2D8A4E;
+  --warning: #D4942C;
+  --error: #C44B4B;
+  --info: #0D7377;
+  --border: #E8E2D9;
+  --radius: 1.5rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-forest: var(--primary);
+  --color-forest-dark: var(--primary-dark);
+  --color-forest-light: var(--primary-light);
+  --color-terracotta: var(--secondary);
+  --color-terracotta-light: var(--secondary-light);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-teal: var(--teal);
+  --color-teal-light: var(--teal-light);
+  --color-indigo: var(--indigo);
+  --color-cream: var(--cream);
+  --color-warm-white: var(--warm-white);
+  --color-stone: var(--stone);
+  --color-charcoal: var(--charcoal);
+  --color-graphite: var(--graphite);
+  --color-ash: var(--ash);
+  --color-dark-bg: var(--dark-bg);
+  --color-dark-surface: var(--dark-surface);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  
+  .text-display-xl {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .text-display-lg {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-size: clamp(2.5rem, 4vw, 4rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  .text-display-md {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+  }
+
+  .gradient-hero {
+    background: linear-gradient(135deg, #0F1A15 0%, #1B4D3E 50%, #0D7377 100%);
+  }
+
+  .gradient-warm {
+    background: linear-gradient(135deg, #FAF7F2 0%, #F0D78C 50%, #E8A85C 100%);
+  }
+
+  .gradient-forest {
+    background: linear-gradient(180deg, #165E39 0%, #0F3F26 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, #D4A843 0%, #F0D78C 100%);
+  }
+
+  .gradient-card-overlay {
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(250,247,242,0.8) 100%);
+  }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
