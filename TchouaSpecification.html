@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCHOUA - Specifications Techniques et Fonctionnelles v3.0</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES & RESET
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  --emerald-50: #ecfdf5; --emerald-100: #d1fae5; --emerald-200: #a7f3d0;
+  --emerald-300: #6ee7b7; --emerald-400: #34d399; --emerald-500: #10b981;
+  --emerald-600: #059669; --emerald-700: #047857; --emerald-800: #065f46;
+  --emerald-900: #064e3b;
+  --teal-500: #14b8a6; --teal-600: #0d9488; --teal-700: #0f766e;
+  --teal-800: #115e59; --teal-900: #134e4a;
+  --bg: #ffffff; --bg-secondary: #f9fafb; --bg-card: #ffffff;
+  --text-primary: #111827; --text-secondary: #6b7280; --text-muted: #9ca3af;
+  --border: #e5e7eb; --border-light: #f3f4f6;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+  --radius: 8px; --radius-lg: 12px; --radius-xl: 16px;
+  --sidebar-w: 280px;
+  --topbar-h: 49px;
+  --progress-h: 3px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 13px; line-height: 1.6; color: var(--text-primary);
+  background: var(--bg-secondary); -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   READING PROGRESS BAR
+   ═══════════════════════════════════════════════════════════════════ */
+.progress-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: var(--progress-h);
+  background: var(--border-light);
+}
+.progress-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--emerald-500), var(--teal-500), #06b6d4);
+  transition: width 150ms ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════════════════════════════════ */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+}
+.sidebar-overlay.active { display: block; }
+
+.sidebar {
+  position: fixed; top: 0; left: 0; z-index: 60;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--bg-card); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 300ms ease-in-out;
+}
+.sidebar.open { transform: translateX(0); }
+
+.sidebar-header {
+  padding: 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.sidebar-logo-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--emerald-500), var(--teal-600));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 14px;
+}
+.sidebar-logo h2 { font-size: 14px; font-weight: 700; }
+.sidebar-logo p { font-size: 10px; color: var(--text-muted); }
+
+.sidebar-search { position: relative; margin-bottom: 4px; }
+.sidebar-search svg {
+  position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; color: var(--text-muted);
+}
+.sidebar-search input {
+  width: 100%; height: 32px; padding: 0 28px 0 30px;
+  font-size: 12px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); outline: none;
+}
+.sidebar-search input:focus { border-color: var(--emerald-500); box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
+.sidebar-search button {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--text-muted);
+  display: none; padding: 2px;
+}
+.sidebar-search button.visible { display: block; }
+.search-count { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+
+.sidebar-nav {
+  flex: 1; overflow-y: auto; padding: 8px;
+}
+.sidebar-nav::-webkit-scrollbar { width: 4px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.nav-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  width: 100%; padding: 8px 10px; border: none; background: none;
+  border-radius: 6px; cursor: pointer; text-align: left;
+  font-size: 12px; color: var(--text-secondary); transition: all 150ms;
+  line-height: 1.4;
+}
+.nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.nav-item.active { background: rgba(16,185,129,0.1); color: var(--emerald-700); font-weight: 600; }
+.nav-item svg { flex-shrink: 0; margin-top: 1px; width: 14px; height: 14px; }
+
+.sidebar-footer {
+  padding: 12px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sidebar-footer span { font-size: 10px; color: var(--text-muted); }
+.sidebar-badge {
+  font-size: 9px; padding: 1px 6px; border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MAIN CONTENT AREA
+   ═══════════════════════════════════════════════════════════════════ */
+.main-area {
+  margin-left: 0; min-height: 100vh;
+  transition: margin-left 300ms ease-in-out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOP BAR
+   ═══════════════════════════════════════════════════════════════════ */
+.topbar {
+  position: sticky; top: var(--progress-h); z-index: 40;
+  background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  height: var(--topbar-h); display: flex; align-items: center;
+  justify-content: space-between; padding: 0 16px;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.hamburger {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border: none; background: none;
+  cursor: pointer; border-radius: 6px; color: var(--text-primary);
+}
+.hamburger:hover { background: var(--bg-secondary); }
+.hamburger svg { width: 18px; height: 18px; }
+
+.topbar-title {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+}
+.topbar-title svg { width: 14px; height: 14px; color: var(--emerald-600); }
+.topbar-badge {
+  font-size: 9px; padding: 2px 6px; background: var(--bg-secondary);
+  border-radius: 4px; color: var(--text-secondary); display: none;
+}
+
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbar-date {
+  font-size: 10px; padding: 4px 8px; border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text-secondary); display: none;
+}
+.btn-top {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg-card); font-size: 10px; color: var(--text-secondary);
+  cursor: pointer; transition: all 150ms;
+}
+.btn-top:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.btn-top svg { width: 12px; height: 12px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLL CONTAINER
+   ═══════════════════════════════════════════════════════════════════ */
+.scroll-container {
+  height: calc(100vh - var(--progress-h) - var(--topbar-h));
+  overflow-y: auto; scroll-behavior: smooth;
+}
+.scroll-container::-webkit-scrollbar { width: 6px; }
+.scroll-container::-webkit-scrollbar-track { background: transparent; }
+.scroll-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.scroll-container::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+.content-wrapper {
+  max-width: 900px; margin: 0 auto;
+  padding: 24px 16px 80px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HERO BANNER
+   ═══════════════════════════════════════════════════════════════════ */
+.hero {
+  position: relative; border-radius: var(--radius-xl); overflow: hidden;
+  background: linear-gradient(135deg, var(--emerald-900), var(--teal-800), #115e59);
+  color: white; padding: 40px 32px; margin-bottom: 40px;
+}
+.hero-bg {
+  position: absolute; inset: 0; opacity: 0.1;
+}
+.hero-bg-circle1 {
+  position: absolute; top: 20px; right: 20px;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: var(--emerald-300); filter: blur(60px);
+}
+.hero-bg-circle2 {
+  position: absolute; bottom: 20px; left: 20px;
+  width: 150px; height: 150px; border-radius: 50%;
+  background: #67e8f9; filter: blur(60px);
+}
+.hero-content { position: relative; z-index: 2; }
+.hero-badges { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.hero-badge {
+  font-size: 10px; padding: 3px 10px; border-radius: 20px;
+  background: rgba(255,255,255,0.15); color: white;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.hero h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+.hero-subtitle {
+  font-size: 18px; font-weight: 500; color: var(--emerald-200);
+  margin-bottom: 12px;
+}
+.hero-desc {
+  font-size: 13px; color: rgba(167,243,208,0.9); max-width: 640px;
+  line-height: 1.6; margin-bottom: 24px;
+}
+.hero-stats {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  margin-top: 20px;
+}
+.hero-stat {
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(8px);
+  border-radius: var(--radius); padding: 12px; text-align: center;
+}
+.hero-stat-value { font-size: 22px; font-weight: 700; }
+.hero-stat-label { font-size: 10px; color: var(--emerald-200); }
+.hero-meta {
+  margin-top: 16px; font-size: 10px; color: rgba(167,243,208,0.5);
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TABLE OF CONTENTS GRID
+   ═══════════════════════════════════════════════════════════════════ */
+.toc-section {
+  margin-bottom: 40px; padding: 24px; border-radius: var(--radius-lg);
+  border: 1px solid var(--border); background: var(--bg-card);
+}
+.toc-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+}
+.toc-header svg { width: 16px; height: 16px; color: var(--text-muted); }
+.toc-header h2 { font-size: 14px; font-weight: 700; }
+.toc-grid {
+  display: grid; grid-template-columns: 1fr; gap: 2px;
+}
+.toc-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 6px; cursor: pointer;
+  text-decoration: none; color: var(--text-secondary); font-size: 12px;
+  transition: all 150ms; border: none; background: none; text-align: left; width: 100%;
+}
+.toc-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.toc-num {
+  font-weight: 700; font-size: 11px; min-width: 24px; color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CHAPTER CARDS
+   ═══════════════════════════════════════════════════════════════════ */
+.chapter-card {
+  margin-bottom: 16px; border-radius: var(--radius-lg);
+  border: 1px solid var(--border); background: var(--bg-card);
+  overflow: hidden; box-shadow: var(--shadow-sm);
+}
+.chapter-header {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 16px 20px; cursor: pointer; user-select: none;
+  transition: background 150ms;
+}
+.chapter-header:hover { background: var(--bg-secondary); }
+.chapter-icon {
+  width: 36px; height: 36px; border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: white;
+}
+.chapter-icon svg { width: 18px; height: 18px; }
+.chapter-info { flex: 1; min-width: 0; }
+.chapter-info h3 { font-size: 14px; font-weight: 700; margin-bottom: 2px; line-height: 1.4; }
+.chapter-info .summary { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.chapter-chevron {
+  flex-shrink: 0; width: 20px; height: 20px; color: var(--text-muted);
+  transition: transform 250ms ease; margin-top: 4px;
+}
+.chapter-card.expanded .chapter-chevron { transform: rotate(180deg); }
+
+.chapter-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 400ms ease-in-out;
+}
+.chapter-card.expanded .chapter-body {
+  max-height: 20000px;
+}
+.chapter-body-inner {
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SUBSECTIONS
+   ═══════════════════════════════════════════════════════════════════ */
+.subsection { margin-top: 16px; }
+.subsection-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 6px; cursor: pointer;
+  background: var(--bg-secondary); border: none; width: 100%;
+  text-align: left; font-size: 13px; font-weight: 600;
+  color: var(--text-primary); transition: all 150ms;
+}
+.subsection-header:hover { background: var(--border-light); }
+.subsection-chevron {
+  width: 14px; height: 14px; color: var(--text-muted);
+  transition: transform 200ms ease; flex-shrink: 0;
+}
+.subsection.expanded .subsection-chevron { transform: rotate(90deg); }
+.subsection-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 300ms ease-in-out;
+}
+.subsection.expanded .subsection-body { max-height: 10000px; }
+.subsection-content {
+  padding: 12px 12px 4px;
+  font-size: 13px; line-height: 1.7; color: var(--text-secondary);
+  white-space: pre-line;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TABLES
+   ═══════════════════════════════════════════════════════════════════ */
+.table-wrap {
+  margin-top: 12px; border-radius: var(--radius);
+  overflow-x: auto; border: 1px solid var(--border);
+}
+.table-wrap table {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}
+.table-wrap th {
+  background: #f5f5f5; padding: 8px 12px; text-align: left;
+  font-weight: 600; font-size: 11px; color: var(--text-secondary);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.table-wrap td {
+  padding: 8px 12px; border-bottom: 1px solid var(--border-light);
+  vertical-align: top; line-height: 1.5;
+}
+.table-wrap tr:nth-child(even) td { background: #fafafa; }
+.table-wrap tr:last-child td { border-bottom: none; }
+.table-wrap td:first-child { font-weight: 600; color: var(--text-primary); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   PRIORITY BADGES
+   ═══════════════════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center; padding: 2px 8px;
+  border-radius: 20px; font-size: 10px; font-weight: 600;
+  white-space: nowrap;
+}
+.badge-critique { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.badge-elevee { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+.badge-moyenne { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.badge-faible { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ROADMAP PHASE CARDS
+   ═══════════════════════════════════════════════════════════════════ */
+.roadmap-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 16px; }
+.phase-card {
+  padding: 16px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--bg-secondary);
+}
+.phase-dot {
+  width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+  margin-right: 8px; flex-shrink: 0;
+}
+.phase-dot-p1 { background: var(--emerald-500); }
+.phase-dot-p2 { background: var(--teal-500); }
+.phase-dot-p3 { background: #06b6d4; }
+.phase-dot-p4 { background: #8b5cf6; }
+.phase-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; }
+.phase-card .phase-period { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; }
+.phase-card ul {
+  list-style: none; padding: 0; font-size: 12px; color: var(--text-secondary); line-height: 1.6;
+}
+.phase-card ul li { padding: 2px 0; padding-left: 16px; position: relative; }
+.phase-card ul li::before {
+  content: ''; position: absolute; left: 0; top: 9px;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--border);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SEARCH HIGHLIGHT
+   ═══════════════════════════════════════════════════════════════════ */
+mark.search-hl {
+  background: #fef08a; color: inherit; padding: 1px 3px; border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BACK TO TOP BUTTON
+   ═══════════════════════════════════════════════════════════════════ */
+.back-to-top {
+  position: fixed; bottom: 24px; right: 24px; z-index: 50;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--emerald-600); color: white; border: none;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md); opacity: 0; transform: translateY(16px);
+  transition: all 250ms ease; pointer-events: none;
+}
+.back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.back-to-top:hover { background: var(--emerald-700); transform: translateY(-2px); }
+.back-to-top svg { width: 18px; height: 18px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════════════ */
+.footer {
+  margin-top: 48px; padding: 32px 20px; text-align: center;
+  border-top: 1px solid var(--border); background: var(--bg-card);
+  border-radius: var(--radius-xl);
+}
+.footer h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.footer .footer-org { font-size: 11px; color: var(--text-muted); margin-bottom: 16px; }
+.footer-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.footer-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 10px; font-weight: 600;
+  background: var(--bg-secondary); color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.footer-badge svg { width: 12px; height: 12px; }
+.footer-copy {
+  margin-top: 16px; font-size: 10px; color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) {
+  .sidebar { transform: translateX(0); }
+  .sidebar-overlay { display: none !important; }
+  .main-area { margin-left: var(--sidebar-w); }
+  .hamburger { display: none; }
+  .topbar-badge { display: inline-flex; }
+  .topbar-date { display: inline-flex; }
+  .toc-grid { grid-template-columns: 1fr 1fr; }
+  .hero { padding: 48px; }
+  .hero h1 { font-size: 40px; }
+  .hero-stats { grid-template-columns: repeat(4, 1fr); }
+  .roadmap-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 1280px) {
+  .content-wrapper { padding: 32px 24px 80px; }
+}
+
+@media (max-width: 480px) {
+  .hero { padding: 24px 16px; }
+  .hero h1 { font-size: 24px; }
+  .hero-subtitle { font-size: 14px; }
+  .hero-stats { gap: 8px; }
+  .hero-stat-value { font-size: 18px; }
+  .content-wrapper { padding: 16px 12px 80px; }
+  .chapter-header { padding: 12px 14px; }
+  .chapter-body-inner { padding: 0 14px 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PROGRESS BAR
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="progress-bar"><div class="progress-bar-fill" id="progressFill"></div></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SIDEBAR OVERLAY (mobile)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SIDEBAR
+     ═══════════════════════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">T</div>
+      <div><h2>TCHOUA</h2><p>STF v3.0</p></div>
+      <button class="hamburger" id="closeSidebar" style="margin-left:auto;" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sidebar-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Rechercher..." autocomplete="off">
+      <button id="clearSearch" aria-label="Effacer">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="search-count" id="searchCount" style="display:none"></div>
+  </div>
+  <nav class="sidebar-nav" id="sidebarNav"></nav>
+  <div class="sidebar-footer">
+    <span>Fondation Tchoua</span>
+    <span class="sidebar-badge">MIT</span>
+  </div>
+  <div style="padding:4px 16px 12px;"><span style="font-size:10px;color:var(--text-muted)">42 pages &middot; 22 chapitres &middot; v3.0</span></div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN AREA
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="main-area">
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" id="openSidebar" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="topbar-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>Specifications Techniques et Fonctionnelles</span>
+      </div>
+      <span class="topbar-badge">Version 3.0</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-date">
+        <svg style="width:12px;height:12px;display:inline;vertical-align:-2px;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        10 Mai 2026
+      </span>
+      <button class="btn-top" id="scrollTopBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+        Haut
+      </button>
+    </div>
+  </header>
+
+  <!-- SCROLL CONTAINER -->
+  <div class="scroll-container" id="scrollContainer">
+    <div class="content-wrapper" id="contentWrapper">
+
+      <!-- ═══════════ HERO BANNER ═══════════ -->
+      <div class="hero">
+        <div class="hero-bg"><div class="hero-bg-circle1"></div><div class="hero-bg-circle2"></div></div>
+        <div class="hero-content">
+          <div class="hero-badges">
+            <span class="hero-badge">Open Source &middot; Licence MIT</span>
+            <span class="hero-badge">v3.0</span>
+          </div>
+          <h1>TCHOUA</h1>
+          <p class="hero-subtitle">Specifications Techniques et Fonctionnelles Completes</p>
+          <p class="hero-desc">Plateforme de gestion des tontines traditionnelles africaines. Application open source, 100% gratuite, multi-associations, IA locale.</p>
+          <div class="hero-stats">
+            <div class="hero-stat"><div class="hero-stat-value">22</div><div class="hero-stat-label">Chapitres</div></div>
+            <div class="hero-stat"><div class="hero-stat-value">42</div><div class="hero-stat-label">Pages</div></div>
+            <div class="hero-stat"><div class="hero-stat-value">15+</div><div class="hero-stat-label">Modules</div></div>
+            <div class="hero-stat"><div class="hero-stat-value">7</div><div class="hero-stat-label">Langues</div></div>
+          </div>
+          <div class="hero-meta">
+            <span>Organisation : Fondation Tchoua</span><span>&middot;</span>
+            <span>Date : 10 mai 2026</span><span>&middot;</span>
+            <span>Classification : Confidentiel</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ TABLE OF CONTENTS ═══════════ -->
+      <div class="toc-section">
+        <div class="toc-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+          <h2>Table des Matieres</h2>
+        </div>
+        <div class="toc-grid" id="tocGrid"></div>
+      </div>
+
+      <!-- ═══════════ CHAPTERS (rendered by JS) ═══════════ -->
+      <div id="chaptersContainer"></div>
+
+      <!-- ═══════════ FOOTER ═══════════ -->
+      <div class="footer">
+        <h3>Fondation Tchoua</h3>
+        <p class="footer-org">Organisation a but non lucratif &middot; Yaounde, Cameroun</p>
+        <div class="footer-badges">
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Open Source
+          </span>
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            100% Gratuit
+          </span>
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Multi-Associations
+          </span>
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 3.36 2.07 6.24 5 7.42V22h6v-4.58c2.93-1.18 5-4.06 5-7.42a8 8 0 0 0-8-8z"/><path d="M9 22h6M10 22v-4h4v4"/></svg>
+            IA Locale
+          </span>
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            7 Langues
+          </span>
+        </div>
+        <p class="footer-copy">&copy; 2026 Fondation Tchoua. Tous droits reserves. Document confidentiel.</p>
+      </div>
+
+    </div><!-- /content-wrapper -->
+  </div><!-- /scroll-container -->
+</div><!-- /main-area -->
+
+<!-- ═══════════ BACK TO TOP ═══════════ -->
+<button class="back-to-top" id="backToTop" aria-label="Retour en haut">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+</button>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SVG ICONS (16x16 simple path-based)
+   ═══════════════════════════════════════════════════════════════════ */
+var ICONS = {
+  bookOpen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  circleDot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/></svg>',
+  barChart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><circle cx="16" cy="14" r="1.5"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  building: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22V12h6v10M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M8 10h.01M16 10h.01M16 14h.01"/></svg>',
+  brain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A5.5 5.5 0 0 0 4 7.5c0 1.5.6 2.9 1.6 3.9L12 17l6.4-5.6A5.5 5.5 0 0 0 9.5 2z"/><path d="M14.5 22A5.5 5.5 0 0 0 20 16.5c0-1.5-.6-2.9-1.6-3.9L12 7l-6.4 5.6A5.5 5.5 0 0 0 14.5 22z"/></svg>',
+  smartphone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+  gitBranch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  zap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  alertTriangle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  bookMarked: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8M8 11h4"/></svg>',
+  chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+  chevronRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   CHAPTER DATA (22 chapters)
+   ═══════════════════════════════════════════════════════════════════ */
+var CHAPTERS = [
+  {
+    id:"ch1", num:1, title:"Introduction et Contexte General",
+    icon:"bookOpen", color:"#059669",
+    summary:"Presentation du projet Tchoua, l'economie sociale et solidaire au Cameroun, la problematique et les objectifs du document.",
+    subsections:[
+      {id:"ch1-1",title:"Presentation du Projet Tchoua",content:"Tchoua est une application open source dediee a la gestion des tontines traditionnelles africaines, concue pour etre 100% gratuite pour tous les utilisateurs, sans abonnement, sans commission cachee et sans limitation fonctionnelle. Le projet s'inscrit dans une demarche de modernisation des pratiques financieres informelles qui constituent le pilier de l'economie solidaire en Afrique subsaharienne.\n\nLes tontines, designees sous le terme de Njangui au Cameroun, de Tontine au Benin et au Togo, de Stokvel en Afrique du Sud ou de Susu en Afrique de l'Ouest, representent l'un des mecanismes d'epargne et de credit les plus repandus sur le continent, impliquant des centaines de millions de personnes.\n\nSelon les estimations de la Banque Mondiale, plus de 80% de la population africaine adulte recourt a des mecanismes financiers informels.\n\nLe nom Tchoua provient du terme bamilke utilise dans la zone Ghomala' (proche du Nguemba) pour designer la tontine rotative. Ce choix onomastique incarne les valeurs fondatrices du projet : confiance communautaire, reciprocite et solidarite sans intermediaire lucratif.\n\nLe code source est publiquement disponible sur GitHub sous licence MIT, permettant a toute communaute, ONG, cooperative ou groupe d'entraide de deployer, adapter et ameliorer la plateforme selon ses besoins specifiques."},
+      {id:"ch1-2",title:"L'Economie Sociale et Solidaire au Cameroun",content:"L'economie sociale et solidaire (ESS) a une riche histoire au Cameroun. Traditionnellement, les populations se sont toujours engagees dans des activites solidaires pour repondre a leurs besoins socio-economiques.\n\nLa creation du ministere des PME, de l'Economie Sociale et de l'Artisanat (MINPMEESA) en 2004 a constitue un tournant decisif, suivie de l'adoption de la loi-cadre sur l'ESS en 2019.\n\nLes Reseaux Locaux d'Economie Sociale et Solidaire (RELESS) figurent parmi les concepts les plus significatifs. A ce jour, 294 RELESS operent dans les dix regions du pays, jouant un role crucial dans le renforcement des economies locales.\n\nLe secteur de l'ESS joue egalement un role essentiel pour les femmes rurales camerounaises qui contribuent significativement a leurs economies locales. Bien que les femmes representent plus de 50,5% de la population et que le Cameroun occupe la troisieme place en Afrique pour le nombre de femmes entrepreneurs, elles restent confrontees a des contraintes societales importantes liees a la nature profondement patriarcale du pays."},
+      {id:"ch1-3",title:"Problematique et Justification",content:"Les tontines traditionnelles africaines, malgre leur efficacite prouvee depuis des siecles, font face a des defis croissants. La gestion manuelle des cotisations entraine frequemment des erreurs de calcul, des litiges sur l'ordre de passage, des difficultes de tracabilite des paiements et des conflits de confiance entre membres.\n\nLes secretaire de tontines, souvent benevoles, passent des heures a tenir des cahiers manuscrits, a calculer les interets et a gerer les rotations.\n\nLes applications existantes (Wave, Orange Money, Mobile Money) ne repondent que partiellement aux besoins specifiques des tontines. Elles se concentrent sur les transactions individuelles et ignorent la dimension collective et solidaire.\n\nTchoua repond a cette double problematique en proposant une solution numerique qui respecte les codes culturels de la tontine tout en apportant la rigueur, la transparence et l'efficience du numerique."},
+      {id:"ch1-4",title:"Objectifs et Portee du Document",content:"Le present document constitue le cahier des charges de reference pour le developpement de la plateforme Tchoua dans sa version 3.0, couvrant les phases 1 a 4 du developpement sur 24 mois.\n\nLes objectifs specifiques sont :\n\u2022 Definir les specifications fonctionnelles completes de chaque module\n\u2022 Specifier l'architecture technique, la stack technologique et les normes de qualite\n\u2022 Documenter les workflows, les cas d'utilisation et les diagrammes de conception\n\u2022 Etablir les exigences de securite, de performance et de conformite reglementaire\n\u2022 Fournir la roadmap de developpement et les indicateurs cles de performance\n\u2022 Servir de base de reference pour les tests fonctionnels et la validation des livrables"},
+      {id:"ch1-5",title:"Glossaire des Termes",content:"",table:{headers:["Terme","Definition"],rows:[["Tontine","Systeme d'epargne et de credit rotatif collectif, pratique traditionnellement en Afrique"],["ROSCA","Rotating Savings and Credit Association - tontine rotative classique"],["ASCA","Accumulating Savings and Credit Association - tontine avec credit accumule"],["Njangui","Terme camerounais designant la tontine dans les langues locales"],["Tchoua","Terme bamilke (Ghomala') designant la tontine rotative"],["Cotisation","Contribution periodique d'un membre a une activite de l'association"],["Mobile Money","Service de transfert d'argent via telephone mobile"],["USSD","Protocol interactif via codes courts sur telephone mobile basique"],["KYC","Know Your Customer - procedure de verification d'identite"],["ESS","Economie Sociale et Solidaire"],["RELESS","Reseau Local d'Economie Sociale et Solidaire"],["RBAC","Role-Based Access Control - controle d'acces base sur les roles"]]}}
+    ]
+  },
+  {
+    id:"ch2", num:2, title:"Vision et Philosophie Open Source",
+    icon:"heart", color:"#e11d48",
+    summary:"Les cinq principes fondamentaux de Tchoua et le modele de gouvernance de la fondation.",
+    subsections:[
+      {id:"ch2-1",title:"Principes Fondamentaux",content:"Le projet Tchoua repose sur cinq principes fondamentaux non negociables :",table:{headers:["Principe","Description"],rows:[["Gratuite absolue et perpetuelle","100% gratuit. Aucun abonnement, aucune commission, aucune fonctionnalite payante. Les couts sont couverts par des dons, subventions et sponsoring ethique."],["Open source et transparence","Code source integrale sur GitHub sous licence MIT. Decisions techniques via RFC publiques. Rapports financiers mensuels."],["Confiance et securite","Aucune donnee collectee a des fins publicitaires. Chiffrement AES-256 au repos, TLS 1.3 en transit. IA exclusivement locale."],["Inclusivite et accessibilite","Fonctionne en connectivite limitee, mode hors-ligne, USSD/SMS, integration Mobile Money. 7 langues supportees."],["Independance et souverainete","Gouverne par la Fondation Tchoua (but non lucratif). Aucun investisseur prive ne detient de veto. Auto-hebergement possible."]]}},
+      {id:"ch2-2",title:"Modele de Gouvernance",content:"Le projet Tchoua est gouverne par une fondation independante a but non lucratif, dont le siege social est etabli a Yaounde (Cameroun) avec des antennes a Douala, Bafoussam et a l'international.\n\nLa gouvernance repose sur trois instances complementaires :\n\u2022 Le comite de direction, elu annuellement, responsable de la strategie globale\n\u2022 Le conseil technique, compose de developpeurs seniors benevoles, charge de la validation architecturale\n\u2022 Le comite consultatif des utilisateurs, constitue de representants des communautes pilotes\n\nLes decisions techniques et fonctionnelles sont prises selon un processus democratique et transparent. Toute proposition significative fait l'objet d'une RFC (Request for Comments) publique, ouverte pendant un minimum de 14 jours.\n\nLes ressources financieres proviennent de quatre sources exclusives : dons individuels (Ko-fi, Liberapay), subventions (PNUD, Banque Mondiale), sponsoring ethique sans influence sur la roadmap, et contributions benevoles."}
+    ]
+  },
+  {
+    id:"ch3", num:3, title:"Gestion des Utilisateurs et Authentification",
+    icon:"users", color:"#7c3aed",
+    summary:"Inscription, authentification multi-canaux, securite (Argon2id, JWT, 2FA) et authentification sociale.",
+    subsections:[
+      {id:"ch3-1",title:"Inscription et Creation de Compte",content:"L'inscription a Tchoua est gratuite et ouverte a toute personne physique agee d'au moins 18 ans. L'utilisateur peut creer un compte via trois canaux : l'application mobile (Android/iOS), l'application web, ou le mode USSD.\n\nChamps obligatoires :\n\u2022 Numero de telephone (identifiant principal, unique)\n\u2022 Nom complet (nom de famille et prenom)\n\u2022 Mot de passe (min 8 caracteres, complexite requise)\n\u2022 Pays de residence\n\nChamps optionnels :\n\u2022 Adresse email, Langue preferee (7 langues), Photo de profil, Genre, Profession\n\nLa verification du numero se fait par code OTP (6 chiffres, valide 5 min, 3 tentatives max). Alternative par appel vocal disponible."},
+      {id:"ch3-2",title:"Processus d'Authentification",content:"Authentification par numero de telephone et mot de passe. Systeme JWT avec acces token de 15 minutes et refresh token de 7 jours. Support multi-appareils avec sessions independantes.\n\nEn cas de mot de passe oublie : reinitialisation via SMS ou email (lien valide 30 min). Apres 3 tentatives echouees, blocage de 15 minutes. 2FA optionnel via TOTP."},
+      {id:"ch3-3",title:"Exigences de Securite",content:"",table:{headers:["Exigence","Description","Priorite"],rows:[["AUTH-001","Hachage mots de passe Argon2id (memory=65536, iterations=3, parallelism=4)","Critique"],["AUTH-002","JWT signe RS256, acces token 15 min, refresh token 7 jours","Critique"],["AUTH-003","Verification OTP par SMS, code 6 chiffres, validite 5 min, max 3 tentatives","Elevee"],["AUTH-004","Blocage compte apres 3 tentatives echouees, deblocage via OTP","Elevee"],["AUTH-005","Support 2FA optionnel via TOTP (RFC 6238)","Moyenne"],["AUTH-006","Gestion multi-sessions avec liste appareils et deconnexion a distance","Elevee"],["AUTH-007","Politique mot de passe : min 8 car., complexite requise, historique 5 versions","Elevee"],["AUTH-008","Chiffrement tokens sensibles en base avec AES-256-GCM","Critique"]]},priorityBadges:true},
+      {id:"ch3-4",title:"Authentification Sociale (Social Login)",content:"Support OAuth 2.0 et OpenID Connect (OIDC) :",table:{headers:["Fournisseur","Web","Mobile","Remarques"],rows:[["Google","OAuth 2.0 / OIDC","Google Sign-In SDK","Le plus repandu"],["Facebook","OAuth 2.0","Facebook Login SDK","Tres populaire en Afrique"],["X (Twitter)","OAuth 2.0","API Twitter","PKCE"],["LinkedIn","OAuth 2.0 / OIDC","SDK LinkedIn","Associations pro"]]}}
+    ]
+  },
+  {
+    id:"ch4", num:4, title:"Architecture RBAC et Droits d'Acces",
+    icon:"shield", color:"#d97706",
+    summary:"Roles systeme et membres, Maker-Checker, cycles de vie des comptes, delegation et audit.",
+    subsections:[
+      {id:"ch4-1",title:"Utilisateurs Systeme (Administration)",content:"L'administrateur principal est le compte le plus privilegie, cree automatiquement lors de l'initialisation. Il dispose d'un acces total a toutes les fonctionnalites, associations et donnees.\n\nL'Admin peut creer d'autres comptes systeme (Support N1, Auditeur, Moderateur) via un workflow strict en trois etapes. Un mot de passe temporaire de 16 caracteres est genere et expire apres 48 heures."},
+      {id:"ch4-2",title:"RBAC Avance et Maker-Checker",content:"Le systeme RBAC associe des permissions a des roles selon le modele CRUD. Le Maker-Checker impose une double validation pour les actions sensibles :",table:{headers:["Action sensible","Maker","Checker","Delai"],rows:[["Suppression utilisateur systeme","Admin/Superviseur","Admin principal","24h"],["Modification parametres globaux","Superviseur","Admin/Checker","48h"],["Desactivation association","Moderateur","Admin/Superviseur","72h"],["Export massif de donnees","Auditeur","Admin principal","24h"]]}},
+      {id:"ch4-3",title:"Utilisateurs Membres",content:"",table:{headers:["Role","Droits fondamentaux","Eligibilite"],rows:[["Fondateur (Createur)","Tous les droits de l'association (Admin local)","Attribue automatiquement au createur"],["President","Droits similaires au Fondateur selon configuration","Designe par le Fondateur ou elu"],["Secretaire","Gere les sessions, valide presences, redige PV","Designe par le Fondateur/President"],["Tresorier","Gere operations financieres, valide repartitions","Designe par le Fondateur/President"],["Membre du Bureau","Droits intermediaires, participe aux votes","Designe ou elu"],["Membre Simple","Voit ses propres donnees, effectue ses versements","Tout membre n'ayant pas de role au bureau"]]}},
+      {id:"ch4-4",title:"Cycles de Vie et Audit",content:"",table:{headers:["Etat","Description","Transitions"],rows:[["Inactif","Compte cree mais non active. Mot de passe temporaire non change","Activation / Suppression"],["Actif","Compte pleinement operationnel","Blocage / Suspension / Archivage"],["Bloque","Temporairement desactive (suspicion, sanction)","Deblocage / Suspension / Archivage"],["Suspendu","Desactive pour duree determinee","Reactivation auto/manuelle"],["Archive","Definitivement desactive. Donnees conservees pour audit RGPD (3 ans min)","Etat terminal"]]}},
+      {id:"ch4-5",title:"Bascule entre Espaces",content:"Un bouton de bascule permet aux utilisateurs ayant un role Systeme et une affiliation associative de passer d'un espace a l'autre sans deconnexion.\n\nL'espace Administration utilise des couleurs froides (bleu fonce, gris anthracite) avec un badge 'Mode Administration', tandis que l'Espace Membre utilise des couleurs chaudes (vert, orange) avec le nom de l'association selectionnee."}
+    ]
+  },
+  {
+    id:"ch5", num:5, title:"Configuration de l'Association",
+    icon:"settings", color:"#0284c7",
+    summary:"Wizard de creation en 7 etapes, associations parent/fille, reglement interieur et structure du bureau.",
+    subsections:[
+      {id:"ch5-1",title:"Wizard de Creation (Assistant en 7 Etapes)",content:"",table:{headers:["Etape","Nom","Description"],rows:[["1","Identite","Nom, description, logo, theme couleur"],["2","Contacts et Localisation","Adresses, email, telephone, region"],["3","Activites","Activation des modules souhaites (Tontine, Epargne, Investissement, Aides)"],["4","Reunions","Frequence, mode d'hebergement (foyer fixe ou rotatif)"],["5","Tontine","Mode d'attribution des cagnottes (Tirage, Encheres, etc.)"],["6","Sessions et Cycle","Duree du cycle, nombre de sessions, date de premiere session"],["7","Reglement Interieur","Saisie structuree article par article"]]}},
+      {id:"ch5-2",title:"Associations Parent / Fille",content:"Une association peut etre rattachee a une association 'Parente'. Tout membre rejoignant une association fille devient automatiquement membre de l'association parente. Le montant de la souscription obligatoire est preleve automatiquement."},
+      {id:"ch5-3",title:"Reglement Interieur",content:"Document structure saisi article par article. Chaque membre doit valider le reglement article par article lors de son adhesion. L'adhesion ne passe a l'etat 'Actif' que si le membre a approuve l'integralite du reglement.\n\nToute modification ulterieure fait l'objet d'une notification a tous les membres et d'une re-validation si necessaire."}
+    ]
+  },
+  {
+    id:"ch6", num:6, title:"Gestion des Membres",
+    icon:"users", color:"#0d9488",
+    summary:"Processus d'adhesion, parrainage, informations familiales et statuts avec tracabilite complete.",
+    subsections:[
+      {id:"ch6-1",title:"Processus d'Adhesion",content:"L'adhesion suit un processus structure comprenant :\n\u2022 Un formulaire d'informations personnelles\n\u2022 Un systeme de parrainage (selection d'un membre actif existant)\n\u2022 Une validation soumise au vote du bureau (unanimite ou 2/3 des voix)\n\u2022 Le paiement des frais d'adhesion initiaux si applicable\n\u2022 Le suivi de l'anciennete pour l'eligibilite a certains postes ou prets"},
+      {id:"ch6-2",title:"Informations Familiales (Pour les Aides)",content:"Pour les aides de solidarite, le systeme enregistre les informations familiales : premier conjoint, enfants, pere et mere. Ces informations sont confidentielles et accessibles uniquement aux membres du bureau et au membre concerne."},
+      {id:"ch6-3",title:"Statuts et Tracabilite",content:"Les statuts possibles : Actif, Suspendu, Radie et Decede.\n\nLe systeme assure un suivi complet de l'anciennete et de l'historique d'activite de chaque membre, necessaire pour l'eligibilite aux postes du bureau, les priorites de prets et le calcul des droits de redistribution des dividendes."}
+    ]
+  },
+  {
+    id:"ch7", num:7, title:"Module Tontines (Cotisations)",
+    icon:"circleDot", color:"#ea580c",
+    summary:"ROSCA, tirages, encheres, ASCA, tontines en nature et internationales avec gestion des defaillances.",
+    subsections:[
+      {id:"ch7-1",title:"Types de Tontines Supportees",content:"",table:{headers:["Type","Description","Caracteristiques cles"],rows:[["ROSCA Classique","Tontine rotative a ordre fixe ou aleatoire","Ordre predefini, montant fixe, periodicite reguliere"],["Tirage au Sort","Beneficiaire tire au hasard parmi les presents","Priorite aux presents, tirage mensuel ou generation calendrier"],["Encheres Publiques","Les membres encherissent pour 'acheter' la cagnotte","Taux min, avant-dernier encherisseur trace, deduction automatique"],["ASCA","Accumulating Savings and Credit Association","Epargne progressive, prets avec interets, capitalisation des gains"],["En Nature","Contributions non monetaires (produits agricoles, artisanat)","Equivalence en valeur, gestion des stocks, circuits de distribution"],["ROSCA Internationale","Tontine multi-pays multi-devises","Gestion multi-devises, integration Mobile Money, fuseaux horaires"]]}},
+      {id:"ch7-2",title:"Tontine a Encheres",content:"Le systeme de tontine a encheres est l'un des plus sophistiques de la plateforme. La mise aux encheres permet aux membres de 'acheter' la cagnotte en proposant un taux d'interet minimum.\n\nL'avant-dernier encherisseur est trace : s'il se desiste, il paie l'interet propose en amende. Le montant de l'enchere est automatiquement deduit de la cagnotte remise au beneficiaire."},
+      {id:"ch7-3",title:"Gestion des Echecs (Defauts de Paiement)",content:"Penalites progressives et automatisees :\n\u2022 15% si le membre n'a pas encore 'mange' la tontine\n\u2022 20% s'il a deja beneficie de la tontine\n\u2022 Le defaillant est automatiquement relegue en fin de liste\n\u2022 Le nom de l'avaliste ou la tracabilite du depot est enregistre pour le recouvrement"},
+      {id:"ch7-4",title:"Remboursement des Interets",content:"Les interets generes par les encheres sont divises en lots et revendus pour un delai fixe (ex: 2 mois).\n\nPenalites de retard : +10% (1 a 30 jours), +15% (31 a 60 jours), +20% (61 a 90 jours)."}
+    ]
+  },
+  {
+    id:"ch8", num:8, title:"Fonds de Solidarite",
+    icon:"heart", color:"#db2777",
+    summary:"Alimentation, aides sante, heureux evenements, deces et gestion complete des decaissements.",
+    subsections:[
+      {id:"ch8-1",title:"Alimentation du Fonds",content:"Le fonds de solidarite est alimente par trois sources :\n\u2022 Cotisation annuelle ou initiale (ex: 72 000 FCFA sur 10 mois)\n\u2022 Prelevements sur tontine (deduction automatique d'un pourcentage)\n\u2022 Reconstitution annuelle : bilan fin d'annee avec calcul automatique du montant a repartir equitablent"},
+      {id:"ch8-2",title:"Aides Sante",content:"Couvertures : hospitalisation membre (70 000 FCFA), conjoint (50 000 FCFA), enfant.\n\nPret Sante d'Urgence : pret a taux 0% (max 100 000 FCFA), remboursable 3 mois apres la sortie de l'hopital."},
+      {id:"ch8-3",title:"Heureux Evenements",content:"\u2022 Mariage : 50 000 FCFA (1er mariage uniquement)\n\u2022 Naissance : 20 000 FCFA avec prime pour les jumeaux\n\nMontants parametrables par chaque association."},
+      {id:"ch8-4",title:"Deces",content:"Le deces constitue l'evenement le plus lourd en termes d'aide financiere :\n\u2022 Membre : 900 000 FCFA\n\u2022 Conjoint : 405 000 FCFA\n\u2022 Parent : 100 000 FCFA\n\u2022 Enfant : 50 000 a 100 000 FCFA\n\nLa ventilation couvre le cercueil, le transport, la restauration et la remise a la veuve/veuf. Le systeme gere egalement les frais de delegation."}
+    ]
+  },
+  {
+    id:"ch9", num:9, title:"Epargne, Investissement et Prets",
+    icon:"barChart", color:"#0891b2",
+    summary:"Depots, echeanciers, taux d'interet, redistribution des benefices et dividendes.",
+    subsections:[
+      {id:"ch9-1",title:"Apports en Capital (Epargne)",content:"Support des depots libres et depots mensuels obligatoires (min 5 000 FCFA/mois). Historisation stricte de la date exacte de chaque versement (impact sur le calcul de la quote-part des interets).\n\nLe systeme genere des releves de compte mensuels par membre detaillant les capitaux, interets, dettes et quote-part."},
+      {id:"ch9-2",title:"Octroi de Prets",content:"Workflow d'approbation par le Secretaire General et le Tresorier. Algorithme d'arbitrage selon 4 criteres :\n\u2022 Regularite des versements du membre\n\u2022 Solvabilite et historique de remboursement\n\u2022 Anciennete et montant cumule du capital\n\u2022 Ordre chronologique de la demande\n\nBlocage si le membre depasse sa limite (2x son capital) ou a un encours non solde."},
+      {id:"ch9-3",title:"Calcul des Interets et Echeancier",content:"",table:{headers:["Association","Taux d'interet","Penalite de retard"],rows:[["NDI MBE ET FILS","2% / mois (3 premiers mois)","4% / mois de penalite"],["AMSED","3% / mois (2 mois max)","Doublement de l'interet si retard"],["A30 (Caisse de residus)","5% / mois","Selon reglement interne"]]}},
+      {id:"ch9-4",title:"Redistribution des Benefices / Dividendes",content:"En fin d'exercice (decembre), le systeme calcule les benefices et procede a la distribution des interets au prorata :\n\nQuote-part (Membre) = Interets totaux x (Capital verse par Membre / Capital total disponible)\n\nExclusion des membres en situation d'emprunt. Detection automatique des retards avec application retroactive de la majoration. Gel des droits d'emprunt en cas de retards successifs."}
+    ]
+  },
+  {
+    id:"ch10", num:10, title:"Gestion Financiere et Recouvrement",
+    icon:"wallet", color:"#047857",
+    summary:"Tracabilite des paiements, consolidation des dettes, compensation et gestion du depart/deces.",
+    subsections:[
+      {id:"ch10-1",title:"Caisse, Virement et Tracabilite",content:"Possibilite d'interdire les paiements en especes (optionnel) avec suivi des virements bancaires et upload des preuves. Interface du Tresorier pour valider les encaissements et generer des releves mensuels.\n\nChaque transaction est horodatee et tracabilitee."},
+      {id:"ch10-2",title:"Consolidation des Dettes et Compensation",content:"En fin d'annee ou au depart/deces, saisie et compensation automatique des dettes. Les deductions couvrent les amendes disciplinaires, les arrieres de collation et les echecs de tontine.\n\nEn cas de creance non recouvree, generation d'un document pour le contentieux (huissier) avec tracabilite des cheques/reconnaissances de dettes."},
+      {id:"ch10-3",title:"Gestion du Depart ou Deces",content:"En cas de depart : calcul de la balance finale (total du - dettes). Si la dette excede les avoirs, un document de recouvrement est genere.\n\nEn cas de deces : le compte est bloque, les aides de solidarite sont declenchees automatiquement. Les avoirs sont transmis : 75% verses a chaque rentree scolaire aux enfants, 25% aux ayants droit."}
+    ]
+  },
+  {
+    id:"ch11", num:11, title:"Moteur de Frequence et Planification",
+    icon:"calendar", color:"#2563eb",
+    summary:"Planification des sessions journaliere, hebdomadaire, mensuelle et annuelle avec regles transversales.",
+    subsections:[
+      {id:"ch11-1",title:"Options de Frequence",content:"",table:{headers:["Type","Options disponibles","Exemples concrets"],rows:[["Journaliere","Tous les jours ou selection de jours specifiques","Lundi-Vendredi, Uniquement les Lundis"],["Hebdomadaire","Choix d'un ou plusieurs jours, intervalle","Chaque Mardi, Lundi+Vendredi, 1x/2 semaines"],["Mensuelle","Date fixe, position relative, par quinzaine","Le 5, 1er samedi, dernier vendredi"],["Annuelle","Date fixe, position relative, periodicit multi-mois","15 Aout, 2eme dimanche Janvier, trimestrielle"]]}},
+      {id:"ch11-2",title:"Regles Transversales",content:"",table:{headers:["Regle","Description"],rows:[["Date de debut","Premiere session calculee automatiquement. Possibilite de forcer une date personnalisee"],["Sessions passees","Modification de frequence n'affecte pas les sessions passees"],["Jours feries","Option 'Reporter si jour ferie' : avancee, reportee, ou annulee"],["Calendrier previsionnel","Generation automatique des 12 prochaines sessions"],["Notifications","Rappels automatiques selon parametre (J-3, J-1, Jour J)"]]}}
+    ]
+  },
+  {
+    id:"ch12", num:12, title:"Repartition Financiere et Encaissement",
+    icon:"barChart", color:"#4f46e5",
+    summary:"Algorithme de repartition automatique par priorite avec typologie des activites.",
+    subsections:[
+      {id:"ch12-1",title:"Typologie des Activites par Priorite",content:"",table:{headers:["Type d'Activite","Caractere","Priorite","Regle de Paiement"],rows:[["Obligatoire Totale","Obligatoire","P1 (Haute)","Montant total doit etre couvert"],["Echeance Remboursement","Obligatoire","P1","Traitee comme obligation totale prioritaire"],["Obligatoire Partielle","Obligatoire","P2","Montant minimum requis, peut payer plus"],["Optionnelle Totale","Optionnelle","P3","Le membre choisit de payer ou non"],["Optionnelle Partielle","Optionnelle","P4 (Basse)","Cle de repartition personnalisee"]]}},
+      {id:"ch12-2",title:"Algorithme de Repartition",content:"POUR CHAQUE membre ayant verse :\n  Solde restant = Montant total verse par le membre\n  POUR CHAQUE activite, triee par priorite croissante :\n    SI l'activite est ACTIVE pour ce membre ALORS :\n      Appliquer la regle de traitement correspondant au type\n      Deduire le montant alloue du Solde restant\n  Affecter le Solde restant au compte 'Excedent' du membre"},
+      {id:"ch12-3",title:"Exemple Pratique",content:"Un membre verse 25 000 FCFA :\n\u2022 P1 - Tontine principale (15 000 FCFA) : Succes, solde = 10 000 FCFA\n\u2022 P1 - Remboursement pret (5 000 FCFA) : Succes, solde = 5 000 FCFA\n\u2022 P2 - Caisse solidarite (min 2 000 FCFA) : 2 000 FCFA, solde = 3 000 FCFA\n\u2022 P4 - Epargne projet (cle = 50% du solde) : 1 500 FCFA, solde = 1 500 FCFA\n\u2022 Excedent non reparti : 1 500 FCFA (reportable ou remboursable)"}
+    ]
+  },
+  {
+    id:"ch13", num:13, title:"Gestion des Reunions et Discipline",
+    icon:"building", color:"#dc2626",
+    summary:"Collation, suivi des presences, horaires, amendes progressives et gestes des infractions.",
+    subsections:[
+      {id:"ch13-1",title:"Gestion de la Collation",content:"Le Censeur ou le Secretaire gere la collation. L'hote est designe par rotation. Caisse de collation : collecte automatique (ex: 3 000 FCFA/membre), reversement d'une somme forfaitaire a l'hote (ex: 150 000 FCFA), deduction des arrieres."},
+      {id:"ch13-2",title:"Suivi des Presences et Horaires",content:"Pointage avec heure d'arrivee systematique. Retard > 30 min : amende automatique de 500 FCFA.\n\nAbsences non justifiees :\n\u2022 1 absence = 1 000 FCFA\n\u2022 2 absences = 3 000 FCFA\n\u2022 3 absences = 5 000 FCFA\n\nAvertissement apres 6 absences, proposition de radiation apres 9 absences."},
+      {id:"ch13-3",title:"Gestion des Infractions (Amendes)",content:"",table:{headers:["Infraction","Amende","Conditions"],rows:[["Retard (> 30 min)","500 FCFA","Automatique selon pointage"],["Absence non justifiee (1ere)","1 000 FCFA","Amende progressive"],["Absence non justifiee (2eme)","3 000 FCFA","Recidive"],["Absence non justifiee (3eme+)","5 000 FCFA","Avertissement apres 6, radiation apres 9"],["Depart anticipe non autorise","500 FCFA","Avant heure de cloture"],["Bavardage / Intervention non autorisee","500 FCFA","Ajout manuel par le Censeur"],["Indiscipline caracterisee","3 000 FCFA","Ajout manuel par le Censeur"],["Retard paiement amendes","+10%","Majoration si non paye le jour meme"]]}}
+    ]
+  },
+  {
+    id:"ch14", num:14, title:"Communication et IA",
+    icon:"brain", color:"#9333ea",
+    summary:"Chat de groupe, notifications intelligentes et conseiller financier IA local.",
+    subsections:[
+      {id:"ch14-1",title:"Module Chat et Communication",content:"Chat de groupe avec messagerie instantanee entre membres d'une meme association. Support des appels vocaux de groupe.\n\nConversations organisees par : Association, Bureau, Activites et Privees.\n\nSysteme de notifications intelligentes : rappels de cotisation, alertes de session, annonces du bureau, validations d'adhesion."},
+      {id:"ch14-2",title:"Module Conseiller Financier IA",content:"Le conseiller financier IA fonctionne exclusivement en local, sans aucun appel a des API externes. Architecture basee sur un modele de langage leger optimise pour les appareils a ressources limitees.\n\nFonctionnalites :\n\u2022 Analyse personnalisee de la situation financiere du membre\n\u2022 Recommandations d'optimisation des cotisations et des prets\n\u2022 Alertes contextuelles basees sur le comportement\n\u2022 Explications pedagogiques des rapports financiers\n\u2022 Suggestion d'actions concretes\n\u2022 Mode hors-ligne accessible sans connexion internet pour les FAQ"}
+    ]
+  },
+  {
+    id:"ch15", num:15, title:"Wallet Integre (Portefeuille Electronique)",
+    icon:"wallet", color:"#16a34a",
+    summary:"Portefeuille pivot personnel, paiement d'engagements, operations externes et integration Mobile Money.",
+    subsections:[
+      {id:"ch15-1",title:"Fonctions Principales",content:"Le Wallet est le coeur du systeme transactionnel de chaque membre :\n\u2022 Paiement des Engagements : regler cotisations, rembourser prets, payer amendes dans toutes les associations\n\u2022 Reception de Fonds : gains de tontines, aides de solidarite, dividendes d'epargne\n\u2022 Tableau de Bord Financier : solde temps reel, historique journal detaille et immuable"},
+      {id:"ch15-2",title:"Operations Externes",content:"\u2022 Depot (Recharge) : Via Mobile Money (Orange Money, MTN MoMo), virement bancaire, especes chez un agent partenaire\n\u2022 Retrait : Vers Mobile Money ou compte bancaire lie (delai 24h max)\n\u2022 Transfert inter-membres : Envoi instantane entre membres de la meme association"},
+      {id:"ch15-3",title:"Integration Mobile Money",content:"Support Orange Money et MTN Mobile Money via API et USSD. Paiement en quelques clics depuis l'app mobile, confirmation par OTP SMS. Reconciliation automatique des paiements et retry automatique en cas d'echec."}
+    ]
+  },
+  {
+    id:"ch16", num:16, title:"Application Mobile Android et iOS",
+    icon:"smartphone", color:"#c026d3",
+    summary:"Navigation mobile, 15 modules adaptes, fonctionnalites natives et gestes tactiles.",
+    subsections:[
+      {id:"ch16-1",title:"Architecture de Navigation",content:"",table:{headers:["Position","Module Principal"],rows:[["1","Accueil - Tableau de Bord (resume, prochaines echeances, alertes)"],["2","Tontines - Mes Tontines, point d'entree des activites financieres"],["3","Actions - Bouton central prominent (FAB) : actions rapides + menu Plus"],["4","Chat - Chat de Groupe, messagerie instantanee"],["5","Profil - Mon Profil, informations, parametres, securite"]]}},
+      {id:"ch16-2",title:"Fonctionnalites Natives Mobile",content:"\u2022 Notifications Push : rappels cotisation, alertes session, nouveaux messages\n\u2022 Authentification Biometrique : empreinte digitale / Face ID\n\u2022 Appareil Photo : capture de justificatifs, photo de profil\n\u2022 Microphone : messages vocaux, commandes vocales\n\u2022 Geolocalisation (GPS) : localisation des lieux de session\n\u2022 Calendrier Natif : ajout automatique des sessions\n\u2022 Repertoire Telephonique : synchronisation pour inviter des contacts\n\u2022 Mode Hors-Ligne : consultation des donnees en cache\n\u2022 Paiement Mobile Money : integration directe\n\u2022 Partage Natif : WhatsApp, Facebook, SMS, email"},
+      {id:"ch16-3",title:"Gestuelle et Interactions Tactiles",content:"",table:{headers:["Geste","Usage dans l'application"],rows:[["Pull-to-refresh","Actualiser une liste (membres, transactions, chat)"],["Swipe horizontal","Changer d'association, naviguer entre onglets"],["Swipe lateral sur element","Actions rapides (payer, voir details)"],["Appui long","Menu contextuel (copier, supprimer, options avancees)"],["Double tap","Zoomer sur une image, aimer un message"],["Shake (secouer)","Annuler derniere action si delai non expire"]]}}
+    ]
+  },
+  {
+    id:"ch17", num:17, title:"Architecture Technique",
+    icon:"gitBranch", color:"#475569",
+    summary:"Stack technique, architecture multi-tenant, API Gateway et modele de donnees Prisma.",
+    subsections:[
+      {id:"ch17-1",title:"Vue d'Ensemble",content:"Architecture modulaire et microservices, concue pour la scalabilite, la maintenabilite et la resilience. Systeme entierement open source et auto-hebergeable."},
+      {id:"ch17-2",title:"Stack Technique Detaillee",content:"",table:{headers:["Couche","Technologie","Justification"],rows:[["Frontend Web","Next.js 15 / React / Tailwind CSS / shadcn/ui","SSR/SSG, performances, ecosystem riche"],["Frontend Mobile","React Native / Expo","Code partage iOS/Android, ecosystem natif"],["Backend / API","Node.js / Next.js API Routes / Prisma ORM","Unification du stack, typage end-to-end"],["Base de Donnees","PostgreSQL 16+ / Row-Level Security","Securite au niveau des lignes, performances"],["Authentification","Firebase Auth / OAuth 2.0 / OIDC","Gratuit, multi-fournisseurs, SDK mobile robustes"],["Hebergement Web","Vercel (frontend) / Hetzner (backend)","CDN mondial, cout maitrise"],["Hebergement Mobile","Expo EAS / App Store / Play Store","Deploiement automatise"],["Conteneurisation","Docker / Docker Compose","Auto-hebergement simplifie"],["CI/CD","GitHub Actions","Integration et deploiement continus"],["Monitoring","Sentry / Grafana","Suivi erreurs et performances en temps reel"]]}},
+      {id:"ch17-3",title:"Architecture Multi-Tenant",content:"Isolation des donnees via Row-Level Security (RLS) de PostgreSQL. Chaque requete SQL est automatiquement filtree selon l'association de l'utilisateur connecte.\n\nVerification supplementaire dans le backend pour prevenir toute faille."},
+      {id:"ch17-4",title:"Modele de Donnees (Prisma Schema)",content:"Entites principales :\n\u2022 User : Authentification, informations personnelles, preferences\n\u2022 Association : Parametrages globaux (banque, bureau, conditions)\n\u2022 AssociationMembership : Role, anciennete, Score de Fiabilite\n\u2022 AssociationActivity : Configuration avec FrequencyConfig et Priority\n\u2022 ActivitySubscription : Souscription avec cles de repartition\n\u2022 ActivitySession : Instance generee par le moteur de frequence\n\u2022 ActivityContribution : Versement alloue par l'algorithme\n\u2022 AssocMeeting / AssocMeetingAttendance : Reunions, presences\n\u2022 AssocLoan / AssocLoanRepayment : Emprunts, taux, remboursements"}
+    ]
+  },
+  {
+    id:"ch18", num:18, title:"Securite et Vie Privee",
+    icon:"lock", color:"#b91c1c",
+    summary:"Chiffrement AES-256, TLS 1.3, RLS, RGPD, OWASP et tests de securite automatises.",
+    subsections:[
+      {id:"ch18-1",title:"Chiffrement et Protection des Donnees",content:"Chiffrement de bout en bout :\n\u2022 AES-256 pour les donnees au repos (disques et bases de donnees)\n\u2022 TLS 1.3 pour les donnees en transit\n\u2022 AES-256-GCM pour les tokens sensibles en base\n\u2022 Argon2id pour les mots de passe (memory=65536, iterations=3, parallelism=4)"},
+      {id:"ch18-2",title:"Conformite Reglementaire",content:"\u2022 RGPD (UE 2016/679) : Droit a l'oubli, portabilite, consentement, DPO\n\u2022 Loi camerounaise n. 2010/012 : Protection des donnees au Cameroun\n\u2022 OWASP Top 10:2025 : Protection contre les 10 vulnerabilites web\n\u2022 OWASP Mobile Top 10:2024 : Protection vulnerabilites mobiles\n\u2022 Maker-Checker : Double validation pour actions sensibles\n\u2022 Audit Log immutable : Journal horodate, inalterable, conservation RGPD"},
+      {id:"ch18-3",title:"Tests de Securite Automatises",content:"Strategie de tests de securite automatises :\n\u2022 Scans de vulnerabilites en CI/CD\n\u2022 Tests de penetration periodiques\n\u2022 Audits de code par outils d'analyse statique (SAST)\n\u2022 Tests d'intrusion (injection SQL, XSS, CSRF, brute force)\n\nLes resultats bloquent la mise en production si des vulnerabilites critiques sont detectees."}
+    ]
+  },
+  {
+    id:"ch19", num:19, title:"Roadmap de Developpement",
+    icon:"target", color:"#15803d",
+    summary:"4 phases sur 24 mois : Fondation, Expansion, Maturite et Ecosysteme.",
+    subsections:[
+      {id:"ch19-1",title:"Phase 1 : Fondation (Mois 1-6)",content:"\u2022 Infrastructure de base (authentification, base de donnees, API Gateway)\n\u2022 Module gestion utilisateurs et associations\n\u2022 Module tontine ROSCA classique avec tirage au sort\n\u2022 Interface web responsive avec selecteur d'association\n\u2022 Application mobile de base avec mode hors-ligne\n\u2022 Integration Mobile Money de base (Orange Money, MTN MoMo)"},
+      {id:"ch19-2",title:"Phase 2 : Expansion (Mois 7-12)",content:"\u2022 Module tontine a encheres avec gestion des defaillances\n\u2022 Fonds de solidarite complet (sante, deces, heureux evenements)\n\u2022 Module epargne et prets avec echeancier automatique\n\u2022 Chat de groupe et notifications intelligentes\n\u2022 Module reunions avec gestion de la discipline\n\u2022 Wallet integre avec operations multi-devises"},
+      {id:"ch19-3",title:"Phase 3 : Maturite (Mois 13-18)",content:"\u2022 Conseiller financier IA (modele local, fonctionnel)\n\u2022 Marketplace pour les echanges entre membres\n\u2022 Gamification (badges, classements, defis)\n\u2022 Academie (cours, quiz, certificats)\n\u2022 Rapports avances et analytiques\n\u2022 USSD et SMS Fallback pour telephones basiques"},
+      {id:"ch19-4",title:"Phase 4 : Ecosysteme (Mois 19-24)",content:"\u2022 Tontine internationale (multi-devises, multi-pays)\n\u2022 Associations parent/fille automatisees\n\u2022 API publique et SDK pour developpeurs tiers\n\u2022 Programme de formation des formateurs en ligne\n\u2022 Partenariats avec des ONG et institutions financieres\n\u2022 Auto-hebergement simplifie (Docker, documentation)"}
+    ],isRoadmap:true
+  },
+  {
+    id:"ch20", num:20, title:"Specifications Non-Fonctionnelles",
+    icon:"zap", color:"#ca8a04",
+    summary:"Performance, scalabilite, accessibilite et internationalisation.",
+    subsections:[
+      {id:"ch20-1",title:"Exigences de Performance",content:"",table:{headers:["Indicateur","Objectif","Priorite"],rows:[["Temps de reponse API","< 200ms (P95)","Critique"],["Temps de chargement page","< 2 secondes sur reseau 3G","Elevee"],["Temps de chargement mobile","< 3 secondes sur reseau 2G/EDGE","Elevee"],["Concurrence simultanee","1 000 utilisateurs simultanes / instance","Elevee"],["Taille application mobile","< 30 MB (APK/IPA)","Moyenne"],["Consommation donnees mobile","< 100 MB/mois (utilisateur actif)","Moyenne"],["Disponibilite service","99.5% uptime (22h maintenance/mois max)","Elevee"],["Temps de restauration","< 4 heures en cas de sinistre","Elevee"]]}},
+      {id:"ch20-2",title:"Exigences de Scalabilite",content:"\u2022 10 000 associations et 100 000 membres actifs simultanement\n\u2022 Architecture microservices permettant de scaler independamment chaque composant\n\u2022 Sharding horizontal PostgreSQL\n\u2022 Cache (Redis) pour les requetes frequentes"},
+      {id:"ch20-3",title:"Accessibilite et Internationalisation",content:"\u2022 7 langues : francais, anglais, Ghomala', Ewondo, Douala, Fulfulde, Mafa\n\u2022 Conformite WCAG 2.1 niveau AA\n\u2022 Mode haute contraste et ajustement taille texte\n\u2022 Support appareils d'entree de gamme (Android Go, iOS anciens)\n\u2022 Fonctionnement degrade sur reseau 2G/EDGE avec mode hors-ligne\n\u2022 Interface adaptative pour ecrans de 320px a 2560px"}
+    ]
+  },
+  {
+    id:"ch21", num:21, title:"Analyse des Risques",
+    icon:"alertTriangle", color:"#c2410c",
+    summary:"Identification des risques, probabilites, impacts et plan de contingence.",
+    subsections:[
+      {id:"ch21-1",title:"Identification des Risques",content:"",table:{headers:["Risque","Probabilite","Impact","Mitigation"],rows:[["Adoption limitee par communautes rurales","Elevee","Critique","USSD/SMS fallback, formation, partenariats ONG"],["Instabilite reseaux Mobile Money","Moyenne","Elevee","Multi-operateurs, mode offline, relais agents"],["Vulnerabilites de securite","Moyenne","Critique","Audits reguliers, bug bounty, chiffrement E2E, OWASP"],["Non-conformite reglementaire","Faible","Critique","Veille juridique permanente, DPO, audit annuel"],["Dependance aux fournisseurs","Moyenne","Elevee","Architecture modulaire, abstraction services, plan migration"],["Ressources financieres insuffisantes","Moyenne","Elevee","Diversification sources, reserves, communaute active"],["Conflits au sein des associations","Elevee","Moyenne","Systeme mediation, transparence comptes, outils resolution"],["Perte de donnees","Faible","Critique","Backups quotidiens, geo-replication, plan restauration teste"]]}},
+      {id:"ch21-2",title:"Plan de Contingence",content:"Chaque risque dispose d'un plan de contingence specifique avec des indicateurs de declenchement, des responsables designes et des delais d'intervention.\n\nEn cas de sinistre majeur (piratage, panne infrastructure), le plan de reprise d'activite prevoit une restauration complete en moins de 4 heures grace aux backups quotidiens geo-repliques et a l'architecture conteneurisee."}
+    ]
+  },
+  {
+    id:"ch22", num:22, title:"Glossaire Technique et Annexes",
+    icon:"bookMarked", color:"#57534e",
+    summary:"Glossaire technique etendu, documents de reference et historique des versions.",
+    subsections:[
+      {id:"ch22-1",title:"Glossaire Technique Etendu",content:"",table:{headers:["Terme","Definition technique"],rows:[["AES-256","Advanced Encryption Standard - chiffrement symetrique 256 bits"],["Argon2id","Algorithme de hachage resistant aux attaques GPU/ASIC"],["JWT (RS256)","JSON Web Token signe avec RSA SHA-256"],["OIDC","OpenID Connect - couche d'authentification au-dessus d'OAuth 2.0"],["OAuth 2.0","Cadre d'autorisation pour deleguer l'acces aux ressources utilisateur"],["PKCE","Proof Key for Code Exchange - protection contre interception"],["TOTP","Time-based One-Time Password - 2FA basee sur le temps (RFC 6238)"],["RLS","Row-Level Security - isolation des donnees au niveau des lignes (PostgreSQL)"],["SSR/SSG","Server-Side Rendering / Static Site Generation - techniques Next.js"],["RBAC","Role-Based Access Control - controle d'acces base sur les roles"],["Maker-Checker","Principe de double validation pour operations sensibles"],["Webhook","Callback HTTP pour notification d'evenements en temps reel"],["CI/CD","Integration et Deploiement Continus"],["SAST","Static Application Security Testing"],["DPO","Data Protection Officer - delegue a la protection des donnees"]]}},
+      {id:"ch22-2",title:"Historique des Versions",content:"",table:{headers:["Version","Date","Auteur","Modifications"],rows:[["1.0","15 Janvier 2026","Fondation Tchoua","Version initiale du cahier des charges"],["2.0","15 Mars 2026","Equipe Technique","Ajout modules RBAC, Wallet, specifications detaillees"],["3.0","10 Mai 2026","Fondation Tchoua","Fusion documents, architecture mobile, IA locale, roadmap 24 mois"]]}}
+    ]
+  }
+];
+
+/* ═══════════════════════════════════════════════════════════════════
+   DOM REFERENCES
+   ═══════════════════════════════════════════════════════════════════ */
+var scrollContainer = document.getElementById('scrollContainer');
+var progressFill = document.getElementById('progressFill');
+var sidebar = document.getElementById('sidebar');
+var sidebarOverlay = document.getElementById('sidebarOverlay');
+var openSidebarBtn = document.getElementById('openSidebar');
+var closeSidebarBtn = document.getElementById('closeSidebar');
+var searchInput = document.getElementById('searchInput');
+var clearSearchBtn = document.getElementById('clearSearch');
+var searchCountEl = document.getElementById('searchCount');
+var sidebarNav = document.getElementById('sidebarNav');
+var tocGrid = document.getElementById('tocGrid');
+var chaptersContainer = document.getElementById('chaptersContainer');
+var backToTopBtn = document.getElementById('backToTop');
+var scrollTopBtn = document.getElementById('scrollTopBtn');
+
+var searchQuery = '';
+var activeSection = 'ch1';
+
+/* ═══════════════════════════════════════════════════════════════════
+   SIDEBAR TOGGLE
+   ═══════════════════════════════════════════════════════════════════ */
+function openSidebar() { sidebar.classList.add('open'); sidebarOverlay.classList.add('active'); }
+function closeSidebar() { sidebar.classList.remove('open'); sidebarOverlay.classList.remove('active'); }
+openSidebarBtn.addEventListener('click', openSidebar);
+closeSidebarBtn.addEventListener('click', closeSidebar);
+sidebarOverlay.addEventListener('click', closeSidebar);
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLL PROGRESS
+   ═══════════════════════════════════════════════════════════════════ */
+scrollContainer.addEventListener('scroll', function() {
+  var st = scrollContainer.scrollTop;
+  var sh = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+  var pct = sh > 0 ? (st / sh) * 100 : 0;
+  progressFill.style.width = pct + '%';
+  // Back to top visibility
+  if (st > 400) { backToTopBtn.classList.add('visible'); } else { backToTopBtn.classList.remove('visible'); }
+});
+
+function scrollToTop() { scrollContainer.scrollTo({ top: 0, behavior: 'smooth' }); closeSidebar(); }
+backToTopBtn.addEventListener('click', scrollToTop);
+scrollTopBtn.addEventListener('click', scrollToTop);
+
+/* ═══════════════════════════════════════════════════════════════════
+   TEXT HIGHLIGHTING
+   ═══════════════════════════════════════════════════════════════════ */
+function highlightText(text) {
+  if (!searchQuery.trim()) return escapeHtml(text);
+  var q = searchQuery.trim();
+  var escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  var re = new RegExp('(' + escaped + ')', 'gi');
+  var parts = text.split(re);
+  var out = '';
+  for (var i = 0; i < parts.length; i++) {
+    if (re.test(parts[i])) {
+      out += '<mark class="search-hl">' + escapeHtml(parts[i]) + '</mark>';
+    } else {
+      out += escapeHtml(parts[i]);
+    }
+    re.lastIndex = 0;
+  }
+  return out;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SEARCH
+   ═══════════════════════════════════════════════════════════════════ */
+function countMatches() {
+  if (!searchQuery.trim()) return 0;
+  var q = searchQuery.toLowerCase();
+  var count = 0;
+  CHAPTERS.forEach(function(ch) {
+    if (ch.title.toLowerCase().indexOf(q) >= 0) count++;
+    if (ch.summary.toLowerCase().indexOf(q) >= 0) count++;
+    ch.subsections.forEach(function(sub) {
+      var m = sub.content.toLowerCase().split(q).length - 1; count += m;
+      if (sub.title.toLowerCase().indexOf(q) >= 0) count++;
+      if (sub.table) {
+        sub.table.headers.forEach(function(h) { if (h.toLowerCase().indexOf(q) >= 0) count++; });
+        sub.table.rows.forEach(function(row) { row.forEach(function(cell) { if (cell.toLowerCase().indexOf(q) >= 0) count++; }); });
+      }
+    });
+  });
+  return count;
+}
+
+searchInput.addEventListener('input', function() {
+  searchQuery = this.value;
+  if (searchQuery) {
+    clearSearchBtn.classList.add('visible');
+    var mc = countMatches();
+    searchCountEl.style.display = 'block';
+    searchCountEl.textContent = mc + ' resultats trouves';
+  } else {
+    clearSearchBtn.classList.remove('visible');
+    searchCountEl.style.display = 'none';
+  }
+  renderSidebar();
+  renderChapters();
+});
+clearSearchBtn.addEventListener('click', function() {
+  searchQuery = '';
+  searchInput.value = '';
+  clearSearchBtn.classList.remove('visible');
+  searchCountEl.style.display = 'none';
+  renderSidebar();
+  renderChapters();
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   FILTER CHAPTERS
+   ═══════════════════════════════════════════════════════════════════ */
+function getFilteredChapters() {
+  if (!searchQuery.trim()) return CHAPTERS;
+  var q = searchQuery.toLowerCase();
+  return CHAPTERS.filter(function(ch) {
+    return ch.title.toLowerCase().indexOf(q) >= 0 ||
+      ch.summary.toLowerCase().indexOf(q) >= 0 ||
+      ch.subsections.some(function(sub) {
+        return sub.title.toLowerCase().indexOf(q) >= 0 || sub.content.toLowerCase().indexOf(q) >= 0;
+      });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER SIDEBAR
+   ═══════════════════════════════════════════════════════════════════ */
+function renderSidebar() {
+  var chapters = getFilteredChapters();
+  if (chapters.length === 0) {
+    sidebarNav.innerHTML = '<div style="text-align:center;padding:32px 0;font-size:12px;color:var(--text-muted)">Aucun resultat pour "' + escapeHtml(searchQuery) + '"</div>';
+    return;
+  }
+  var html = '';
+  chapters.forEach(function(ch) {
+    var cls = activeSection === ch.id ? ' nav-item active' : ' nav-item';
+    html += '<button class="' + cls + '" data-scrollto="' + ch.id + '">' +
+      '<span style="color:' + ch.color + '">' + ICONS[ch.icon] + '</span>' +
+      '<span><b>' + ch.num + '.</b> ' + escapeHtml(ch.title) + '</span>' +
+      '</button>';
+  });
+  sidebarNav.innerHTML = html;
+  // Bind scroll-to
+  sidebarNav.querySelectorAll('[data-scrollto]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var targetId = this.getAttribute('data-scrollto');
+      scrollToSection(targetId);
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER TABLE OF CONTENTS
+   ═══════════════════════════════════════════════════════════════════ */
+function renderTOC() {
+  var html = '';
+  CHAPTERS.forEach(function(ch) {
+    html += '<button class="toc-item" data-scrollto="' + ch.id + '">' +
+      '<span class="toc-num">' + ch.num + '.</span>' +
+      '<span>' + escapeHtml(ch.title) + '</span></button>';
+  });
+  tocGrid.innerHTML = html;
+  tocGrid.querySelectorAll('[data-scrollto]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      scrollToSection(this.getAttribute('data-scrollto'));
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLL TO SECTION
+   ═══════════════════════════════════════════════════════════════════ */
+function scrollToSection(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  // Expand chapter
+  var card = el.closest ? el.closest('.chapter-card') : null;
+  if (card) card.classList.add('expanded');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  closeSidebar();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PRIORITY BADGE HELPER
+   ═══════════════════════════════════════════════════════════════════ */
+function priorityBadge(text) {
+  if (!text) return '';
+  var t = text.toLowerCase();
+  if (t === 'critique') return ' <span class="badge badge-critique">' + escapeHtml(text) + '</span>';
+  if (t === 'elevee') return ' <span class="badge badge-elevee">' + escapeHtml(text) + '</span>';
+  if (t === 'moyenne') return ' <span class="badge badge-moyenne">' + escapeHtml(text) + '</span>';
+  if (t === 'faible') return ' <span class="badge badge-faible">' + escapeHtml(text) + '</span>';
+  return escapeHtml(text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ROADMAP PHASE CARD HELPER
+   ═══════════════════════════════════════════════════════════════════ */
+function roadmapPhase(num, title, period, dotClass) {
+  var items = '';
+  if (num === 1) items = ['Infrastructure de base (authentification, base de donnees, API Gateway)','Module gestion utilisateurs et associations','Module tontine ROSCA classique avec tirage au sort','Interface web responsive avec selecteur d\'association','Application mobile de base avec mode hors-ligne','Integration Mobile Money de base (Orange Money, MTN MoMo)'];
+  else if (num === 2) items = ['Module tontine a encheres avec gestion des defaillances','Fonds de solidarite complet (sante, deces, heureux evenements)','Module epargne et prets avec echeancier automatique','Chat de groupe et notifications intelligentes','Module reunions avec gestion de la discipline','Wallet integre avec operations multi-devises'];
+  else if (num === 3) items = ['Conseiller financier IA (modele local, fonctionnel)','Marketplace pour les echanges entre membres','Gamification (badges, classements, defis)','Academie (cours, quiz, certificats)','Rapports avances et analytiques','USSD et SMS Fallback pour telephones basiques'];
+  else items = ['Tontine internationale (multi-devises, multi-pays)','Associations parent/fille automatisees','API publique et SDK pour developpeurs tiers','Programme de formation des formateurs en ligne','Partenariats avec des ONG et institutions financieres','Auto-hebergement simplifie (Docker, documentation)'];
+  var listHtml = items.map(function(it) { return '<li>' + escapeHtml(it) + '</li>'; }).join('');
+  return '<div class="phase-card"><h4><span class="phase-dot ' + dotClass + '"></span>Phase ' + num + ' : ' + escapeHtml(title) + '</h4><p class="phase-period">' + escapeHtml(period) + '</p><ul>' + listHtml + '</ul></div>';
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER CHAPTERS
+   ═══════════════════════════════════════════════════════════════════ */
+function renderChapters() {
+  var chapters = getFilteredChapters();
+  if (chapters.length === 0) {
+    chaptersContainer.innerHTML = '<div style="text-align:center;padding:48px 16px;font-size:13px;color:var(--text-muted)">Aucun chapitre correspondant a "' + escapeHtml(searchQuery) + '"</div>';
+    return;
+  }
+  var html = '';
+  chapters.forEach(function(ch) {
+    var iconSvg = ICONS[ch.icon] || ICONS.bookOpen;
+
+    // Check for priority badges (Ch3 security table)
+    var securityBadgesHtml = '';
+    if (ch.id === 'ch3' && ch.subsections[2] && ch.subsections[2].table) {
+      var critique = 0, elevee = 0;
+      ch.subsections[2].table.rows.forEach(function(row) {
+        var p = (row[row.length-1] || '').toLowerCase();
+        if (p === 'critique') critique++;
+        else if (p === 'elevee') elevee++;
+      });
+      securityBadgesHtml = '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
+        (critique ? '<span class="badge badge-critique">' + critique + ' Critique</span>' : '') +
+        (elevee ? '<span class="badge badge-elevee">' + elevee + ' Elevee</span>' : '') +
+        '</div>';
+    }
+
+    // Chapter header
+    html += '<div class="chapter-card" id="' + ch.id + '">';
+    html += '<div class="chapter-header" data-chapter="' + ch.id + '">';
+    html += '<div class="chapter-icon" style="background:' + ch.color + '">' + iconSvg + '</div>';
+    html += '<div class="chapter-info"><h3>' + ch.num + '. ' + highlightText(ch.title) + '</h3>';
+    html += '<p class="summary">' + highlightText(ch.summary) + '</p>' + securityBadgesHtml + '</div>';
+    html += '<div class="chapter-chevron">' + ICONS.chevronDown + '</div>';
+    html += '</div>';
+
+    // Chapter body
+    html += '<div class="chapter-body"><div class="chapter-body-inner">';
+
+    // Roadmap special layout
+    if (ch.isRoadmap) {
+      html += '<div class="roadmap-grid">';
+      html += roadmapPhase(1, 'Fondation', 'Mois 1-6', 'phase-dot-p1');
+      html += roadmapPhase(2, 'Expansion', 'Mois 7-12', 'phase-dot-p2');
+      html += roadmapPhase(3, 'Maturite', 'Mois 13-18', 'phase-dot-p3');
+      html += roadmapPhase(4, 'Ecosysteme', 'Mois 19-24', 'phase-dot-p4');
+      html += '</div>';
+    }
+
+    // Subsections
+    ch.subsections.forEach(function(sub) {
+      html += '<div class="subsection">';
+      html += '<div class="subsection-header" data-sub="' + sub.id + '">';
+      html += '<span class="subsection-chevron">' + ICONS.chevronRight + '</span>';
+      html += '<span>' + highlightText(sub.title) + '</span>';
+      html += '</div>';
+      html += '<div class="subsection-body"><div class="subsection-content">';
+
+      if (sub.content) html += '<p>' + highlightText(sub.content) + '</p>';
+      if (sub.table) {
+        html += '<div class="table-wrap"><table><thead><tr>';
+        sub.table.headers.forEach(function(h) {
+          html += '<th>' + highlightText(h) + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        sub.table.rows.forEach(function(row, ri) {
+          html += '<tr>';
+          row.forEach(function(cell, ci) {
+            // Check if last column is priority
+            var isLastCol = ci === row.length - 1;
+            var isPriorityCol = sub.table.headers.length > 1 &&
+              (sub.table.headers[sub.table.headers.length-1] === 'Priorite' ||
+               sub.table.headers[sub.table.headers.length-1] === 'Impact');
+            if (isLastCol && isPriorityCol) {
+              html += '<td>' + priorityBadge(cell) + '</td>';
+            } else {
+              html += '<td>' + highlightText(cell) + '</td>';
+            }
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+      }
+
+      html += '</div></div></div>';
+    });
+
+    html += '</div></div></div>'; // close body-inner, body, card
+  });
+
+  chaptersContainer.innerHTML = html;
+  bindChapterEvents();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BIND CHAPTER / SUBSECTION ACCORDION EVENTS
+   ═══════════════════════════════════════════════════════════════════ */
+function bindChapterEvents() {
+  // Chapter accordion
+  document.querySelectorAll('.chapter-header[data-chapter]').forEach(function(header) {
+    header.addEventListener('click', function() {
+      this.closest('.chapter-card').classList.toggle('expanded');
+    });
+  });
+  // Subsection accordion
+  document.querySelectorAll('.subsection-header[data-sub]').forEach(function(header) {
+    header.addEventListener('click', function() {
+      this.closest('.subsection').classList.toggle('expanded');
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INTERSECTION OBSERVER FOR ACTIVE SECTION
+   ═══════════════════════════════════════════════════════════════════ */
+var observerCallback = function(entries) {
+  var visible = entries.filter(function(e) { return e.isIntersecting; });
+  if (visible.length > 0) {
+    activeSection = visible[0].target.id;
+    renderSidebar();
+  }
+};
+
+var observer = new IntersectionObserver(observerCallback, {
+  root: scrollContainer,
+  threshold: 0.15,
+  rootMargin: '-10% 0px -60% 0px'
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════════ */
+renderTOC();
+renderSidebar();
+renderChapters();
+
+// Observe chapter elements
+CHAPTERS.forEach(function(ch) {
+  var el = document.getElementById(ch.id);
+  if (el) observer.observe(el);
+});
+
+// Expand first chapter by default
+var firstCard = document.querySelector('.chapter-card');
+if (firstCard) firstCard.classList.add('expanded');
+
+</script>
+</body>
+</html>
