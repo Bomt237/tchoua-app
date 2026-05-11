@@ -130,13 +130,19 @@ fi
 # ─── ÉTAPE 6 : Installation des dépendances Node ────────────────────────────
 log "Étape 6/10 : Installation des dépendances npm..."
 cd "$APP_DIR"
-npm ci --omit=dev
+npm ci
 
 # ─── ÉTAPE 7 : Migration de la base de données (Prisma) ─────────────────────
 log "Étape 7/10 : Génération du client Prisma et migrations..."
 npx prisma generate
-npx prisma migrate deploy
-log "Migrations Prisma appliquées sur PostgreSQL."
+if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations)" ]; then
+  npx prisma migrate deploy
+  log "Migrations Prisma appliquées sur PostgreSQL."
+else
+  warn "Aucune migration trouvée. Utilisation de prisma db push pour initialiser la base..."
+  npx prisma db push --accept-data-loss
+  log "Base de données initialisée via db push."
+fi
 
 # ─── ÉTAPE 8 : Build de l'application Next.js ───────────────────────────────
 log "Étape 8/10 : Build de production Next.js..."
