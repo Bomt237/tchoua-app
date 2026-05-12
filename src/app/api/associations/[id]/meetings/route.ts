@@ -89,14 +89,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "title et scheduledAt sont requis" }, { status: 400 });
   }
 
+  function resolveQuorum(typeVal?: string, provided?: number) {
+    if (provided !== undefined && provided !== null) return provided;
+    if (typeVal === "SPEECH_CIRCLE") return null;
+    if (typeVal === "BUREAU_MEETING" || typeVal === "COMMISSION_MEETING") return 50;
+    return 0;
+  }
+
+  const resolvedType = type ?? "REGULAR";
+
   const meeting = await prisma.assocMeeting.create({
     data: {
       associationId: id,
       title,
-      type: type ?? "ORDINARY",
+      type: resolvedType,
       scheduledAt: new Date(scheduledAt),
       location,
-      quorumRequired: quorumRequired ?? 0,
+      quorumRequired: resolveQuorum(resolvedType, quorumRequired),
       agenda: agenda ? JSON.stringify(agenda) : null,
       notes,
       isRotating: isRotating ?? false,

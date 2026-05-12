@@ -45,6 +45,7 @@ model User {
   receivedTransfers     Transfer[]         @relation("TransferReceiver")
   scoringRecords        ScoringRecord[]
   auditLogs             AuditLog[]
+  associationAuditLogs  AssociationAuditLog[]
   messages              Message[]
   messageReactions      MessageReaction[]
   savingsGoals          SavingsGoal[]
@@ -760,11 +761,13 @@ model CaisseLoan {
 
 model Association {
   id            String   @id @default(cuid())
-  name          String
+  name          String   @unique
+  nameSlug      String?  @unique
   description   String?
   // TONTINE_CLUB, COOPERATIVE, SOLIDARITY, INVESTMENT, AGRICULTURAL, MUTUAL, OTHER
   type          String   @default("TONTINE_CLUB")
-  status        String   @default("ACTIVE")  // ACTIVE, SUSPENDED, DISSOLVED
+  // DRAFT, PENDING, ACTIVE, SUSPENDED, DISSOLVED
+  status        String   @default("DRAFT")
   isPublic      Boolean  @default(false)
   color         String   @default("#0d3d28")
   logo          String?
@@ -772,6 +775,9 @@ model Association {
   website       String?
   email         String?
   phone         String?
+  dissolvedAt   DateTime?
+  dissolutionReason String?
+  activatedAt   DateTime?
   // Association Parent (Hiérarchie)
   parentId      String?
   parent        Association? @relation("AssociationHierarchy", fields: [parentId], references: [id])
@@ -812,6 +818,17 @@ model Association {
   assocMessages AssocMessage[]
   customRoles   AssociationCustomRole[]
   regulations   AssociationRegulationArticle[]
+  relationsSource AssociationRelation[] @relation("RelationSource")
+  relationsTarget AssociationRelation[] @relation("RelationTarget")
+  lifecycleEvents AssociationLifecycleEvent[]
+  auditLogs     AssociationAuditLog[]
+  elections     Election[]
+  approvalWorkflows ApprovalWorkflow[]
+  reports       AssociationReport[]
+  notifs        AssociationNotification[]
+  webhooks      AssociationWebhook[]
+  mandates      MandatePeriod[]
+  reportSchedules ReportSchedule[]
 
   @@map("associations")
 }
@@ -824,7 +841,8 @@ model AssociationMembership {
   // TREASURER, TREASURER_ADJ, SOLIDARITY_OFFICER, NATURE_OFFICER,
   // AUDITOR, CENSOR, ADVISOR, FOUNDER
   role            String    @default("MEMBER")
-  status          String    @default("PENDING")  // PENDING, ACTIVE, SUSPENDED, LEFT
+  // PENDING, ACTIVE, SUSPENDED, LEFT, EXPELLED, BLACKLISTED, RESIGNED, DECEASED
+  status          String    @default("PENDING")
   joinedAt        DateTime?
   leftAt          DateTime?
   sponsorId       String?
@@ -832,6 +850,16 @@ model AssociationMembership {
   memberNumber    String?   // numéro d'ordre dans l'association
   excessBalance   Float     @default(0)    // Excédent (reliquat non alloué)
   notes           String?
+  // Blacklist / exclusion
+  blacklistedAt   DateTime?
+  blacklistReason String?
+  excludedAt      DateTime?
+  excludeReason   String?
+  resignedAt      DateTime?
+  deceasedAt      DateTime?
+  invitedById     String?
+  invitedBy       AssociationMembership? @relation("Inviter", fields: [invitedById], references: [id])
+  invitedMembers  AssociationMembership[] @relation("Inviter")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -849,6 +877,11 @@ model AssociationMembership {
   sanctions       AssocSanction[]
   waiverRequests  AssocWaiverRequest[]
   regulationApprovals MembershipRegulationApproval[]
+  votes           ElectionVote[]
+  candidates      ElectionCandidate[]
+  mandates        MandatePeriod[]
+  notifs          AssociationNotification[]
+  approvalVotes   ApprovalVote[]
 
   // Rôle personnalisé optionnel (cumulatif avec role de base)
   customRoleId    String?
@@ -1078,7 +1111,7 @@ model AssocMeeting {
   id              String   @id @default(cuid())
   associationId   String
   title           String?
-  // REGULAR, EXTRAORDINARY, AG_ORDINARY, AG_EXTRAORDINARY
+  // REGULAR, EXTRAORDINARY, AG_ORDINARY, AG_EXTRAORDINARY, BUREAU_MEETING, COMMISSION_MEETING, SPEECH_CIRCLE
   type            String   @default("REGULAR")
   scheduledAt     DateTime
   location        String?
@@ -1284,7 +1317,7 @@ model AssociationTemplate {
   description     String
   // TONTINE, FAMILLE, COMMERCE, VILLAGE, PROJET, RELIGIEUX, EPARGNE
   category        String   @default("TONTINE")
-  // SYSTEM, COMMUNITY, PRIVATE
+  // SYSTEM, COMMUNITY, PRIVATE, FEDERATION
   origin          String   @default("SYSTEM")
   // PUBLIC, PRIVATE, PENDING_REVIEW
   visibility      String   @default("PUBLIC")
@@ -1293,14 +1326,19 @@ model AssociationTemplate {
   usageCount      Int      @default(0)
   rating          Float    @default(0)
   ratingCount     Int      @default(0)
+  popularityScore Float    @default(0)
   iconEmoji       String   @default("🏦")
   color           String   @default("#0d3d28")
   creatorId       String?
+  forkedFromId    String?
+  version         Int      @default(1)
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   creator         User?    @relation("TemplateCreator", fields: [creatorId], references: [id])
+  forkedFrom      AssociationTemplate? @relation("TemplateFork", fields: [forkedFromId], references: [id])
+  forks           AssociationTemplate[] @relation("TemplateFork")
   activities      TemplateActivity[]
   associations    Association[]
   ratings         TemplateRating[]
@@ -1414,6 +1452,320 @@ model AssocLoanRepayment {
   loan          AssocLoan @relation(fields: [loanId], references: [id])
 
   @@map("assoc_loan_repayments")
+}
+
+// ─── Score de fiabilité par membre et par activité ────────────────────────
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PHASE 1 — FONDATIONS : Cycle de vie, Relations inter-associations, Audit
+// ═══════════════════════════════════════════════════════════════════════════
+
+model AssociationRelation {
+  id          String   @id @default(cuid())
+  sourceId    String
+  targetId    String
+  // MOTHER, CHILD, SISTER
+  type        String
+  // ACTIVE, PENDING, DISSOLVED
+  status      String   @default("ACTIVE")
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  source      Association @relation("RelationSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target      Association @relation("RelationTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId, type])
+  @@map("association_relations")
+}
+
+model AssociationLifecycleEvent {
+  id            String   @id @default(cuid())
+  associationId String
+  fromStatus    String?
+  toStatus      String
+  triggeredBy   String   // USER, SYSTEM, ADMIN
+  userId        String?
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+
+  @@map("association_lifecycle_events")
+}
+
+model AssociationAuditLog {
+  id            String   @id @default(cuid())
+  associationId String
+  userId        String?
+  action        String
+  entity        String
+  entityId      String?
+  changes       String?  // JSON diff
+  details       String?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+  user          User?       @relation(fields: [userId], references: [id])
+
+  @@map("association_audit_logs")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PHASE 2 — GOUVERNANCE : Élections, Mandats, Workflows de validation, Vote
+// ═══════════════════════════════════════════════════════════════════════════
+
+model Election {
+  id            String   @id @default(cuid())
+  associationId String
+  title         String
+  // BUREAU, PRESIDENT, CUSTOM_ROLE
+  type          String
+  // DRAFT, OPEN, CLOSED, CANCELLED
+  status        String   @default("DRAFT")
+  startDate     DateTime?
+  endDate       DateTime?
+  quorumRequired Int?
+  quorumReached  Boolean @default(false)
+  result        String?  // JSON
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+  candidates    ElectionCandidate[]
+  votes         ElectionVote[]
+  mandate       MandatePeriod?
+
+  @@map("elections")
+}
+
+model ElectionCandidate {
+  id            String   @id @default(cuid())
+  electionId    String
+  membershipId  String
+  // PRESIDENT, VICE_PRESIDENT, SECRETARY, TREASURER, etc.
+  position      String
+  manifesto     String?
+  votesCount    Int      @default(0)
+  isElected     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  election      Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  membership    AssociationMembership @relation(fields: [membershipId], references: [id])
+  votes         ElectionVote[]
+
+  @@unique([electionId, membershipId, position])
+  @@map("election_candidates")
+}
+
+model ElectionVote {
+  id            String   @id @default(cuid())
+  electionId    String
+  membershipId  String
+  candidateId   String
+  // 1 = pour, -1 = contre, 0 = abstention
+  value         Int      @default(1)
+  createdAt     DateTime @default(now())
+
+  election      Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  membership    AssociationMembership @relation(fields: [membershipId], references: [id])
+  candidate     ElectionCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([electionId, membershipId])
+  @@map("election_votes")
+}
+
+model MandatePeriod {
+  id            String   @id @default(cuid())
+  electionId    String   @unique
+  associationId String
+  membershipId  String
+  role          String
+  startDate     DateTime @default(now())
+  endDate       DateTime?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  election      Election @relation(fields: [electionId], references: [id])
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+  membership    AssociationMembership @relation(fields: [membershipId], references: [id])
+
+  @@map("mandate_periods")
+}
+
+model ApprovalWorkflow {
+  id            String   @id @default(cuid())
+  associationId String
+  name          String
+  // LOAN, SOCIAL_AID, SANCTION, ACTIVITY, MEMBERSHIP_ACTION, DISSOLUTION, etc.
+  entityType    String
+  // ROUTINE(33%), STANDARD(50%), IMPORTANT(66%), CRITICAL(75%), CONSTITUTIONAL(100%)
+  votingLevel   String   @default("STANDARD")
+  minVotesRequired Int?
+  timeoutHours  Int      @default(72)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+  steps         ApprovalStep[]
+  requests      ApprovalRequest[]
+
+  @@map("approval_workflows")
+}
+
+model ApprovalStep {
+  id            String   @id @default(cuid())
+  workflowId    String
+  stepNumber    Int
+  // PRESIDENT, SECRETARY, TREASURER, etc.
+  roleRequired  String
+  // APPROVE, REVIEW, NOTIFY
+  action        String   @default("APPROVE")
+  createdAt     DateTime @default(now())
+
+  workflow      ApprovalWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, stepNumber])
+  @@map("approval_steps")
+}
+
+model ApprovalRequest {
+  id            String   @id @default(cuid())
+  workflowId    String
+  entityType    String
+  entityId      String
+  requestedById String
+  // PENDING, APPROVED, REJECTED, EXPIRED
+  status        String   @default("PENDING")
+  currentStep   Int      @default(1)
+  votesFor      Int      @default(0)
+  votesAgainst  Int      @default(0)
+  votesAbstain  Int      @default(0)
+  deadline      DateTime?
+  decidedAt     DateTime?
+  decidedById   String?
+  reason        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workflow      ApprovalWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  votes         ApprovalVote[]
+
+  @@map("approval_requests")
+}
+
+model ApprovalVote {
+  id            String   @id @default(cuid())
+  requestId     String
+  membershipId  String
+  // FOR, AGAINST, ABSTAIN
+  vote          String
+  comment       String?
+  createdAt     DateTime @default(now())
+
+  request       ApprovalRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  membership    AssociationMembership @relation(fields: [membershipId], references: [id])
+
+  @@unique([requestId, membershipId])
+  @@map("approval_votes")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PHASE 3 — RAPPORTS : Moteur de rapports structurés, scheduling, OHADA
+// ═══════════════════════════════════════════════════════════════════════════
+
+model AssociationReport {
+  id            String   @id @default(cuid())
+  associationId String
+  // ACTIVITY, MEMBER, FINANCIAL, BILAN, COMPTE_RESULTAT, GRAND_LIVRE,
+  // TRESORERIE, OHADA_SYSCOHADA, CROSS, INVESTMENT, CUSTOM
+  type          String
+  title         String
+  // PDF, EXCEL, CSV
+  format        String   @default("PDF")
+  // PENDING, GENERATING, READY, ERROR
+  status        String   @default("PENDING")
+  fileUrl       String?
+  parameters    String?  // JSON
+  generatedById String?
+  generatedAt   DateTime?
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+
+  @@map("association_reports")
+}
+
+model ReportSchedule {
+  id            String   @id @default(cuid())
+  associationId String
+  reportType    String
+  title         String
+  format        String   @default("PDF")
+  // DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  frequency     String
+  dayOfMonth    Int?
+  dayOfWeek     Int?
+  hour          Int      @default(8)
+  parameters    String?  // JSON
+  recipients    String?  // JSON emails
+  isActive      Boolean  @default(true)
+  lastRunAt     DateTime?
+  nextRunAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+
+  @@map("report_schedules")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PHASE 4 — POLISH : Notifications association, Webhooks, Traçabilité
+// ═══════════════════════════════════════════════════════════════════════════
+
+model AssociationNotification {
+  id            String   @id @default(cuid())
+  associationId String
+  membershipId  String?
+  title         String
+  message       String
+  // INFO, WARNING, ACTION_REQUIRED, SUCCESS, ERROR
+  type          String   @default("INFO")
+  link          String?
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+  membership    AssociationMembership? @relation(fields: [membershipId], references: [id])
+
+  @@map("association_notifications")
+}
+
+model AssociationWebhook {
+  id              String   @id @default(cuid())
+  associationId   String
+  url             String
+  secret          String?
+  events          String   // JSON: ["MEMBER_JOINED", "MEETING_CREATED", ...]
+  isActive        Boolean  @default(true)
+  lastTriggeredAt DateTime?
+  lastStatus      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  association     Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+
+  @@map("association_webhooks")
 }
 
 // ─── Score de fiabilité par membre et par activité ────────────────────────

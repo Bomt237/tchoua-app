@@ -135,13 +135,23 @@ npm ci
 # ─── ÉTAPE 7 : Migration de la base de données (Prisma) ─────────────────────
 log "Étape 7/10 : Génération du client Prisma et migrations..."
 npx prisma generate
-if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations)" ]; then
+
+# Vérifie si la table _prisma_migrations existe (baselining requis)
+MIGRATIONS_TABLE_EXISTS=$(sudo -u postgres psql -d "${DB_NAME}" -tAc "SELECT 1 FROM information_schema.tables WHERE table_name = '_prisma_migrations' LIMIT 1;" 2>/dev/null || echo "")
+
+if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations)" ] && [ "$MIGRATIONS_TABLE_EXISTS" = "1" ]; then
   npx prisma migrate deploy
   log "Migrations Prisma appliquées sur PostgreSQL."
 else
-  warn "Aucune migration trouvée. Utilisation de prisma db push pour initialiser la base..."
+  if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations)" ] && [ "$MIGRATIONS_TABLE_EXISTS" != "1" ]; then
+    warn "Table _prisma_migrations introuvable — la base n'est pas baselinée. Utilisation de prisma db push..."
+    warn "Pour activer les migrations futures, exécutez manuellement sur le serveur :"
+    warn "  npx prisma migrate resolve --applied <nom_migration_baseline>"
+  else
+    warn "Aucune migration trouvée. Utilisation de prisma db push pour initialiser la base..."
+  fi
   npx prisma db push --accept-data-loss
-  log "Base de données initialisée via db push."
+  log "Base de données synchronisée via db push."
 fi
 
 # ─── ÉTAPE 8 : Build de l'application Next.js ───────────────────────────────

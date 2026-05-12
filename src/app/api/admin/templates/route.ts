@@ -25,15 +25,15 @@ export async function POST(request: NextRequest) {
     if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
     const body = await request.json();
-    const { name, description, category, config, status } = body;
+    const { name, description, category, reglementHtml, visibility } = body;
 
     const template = await prisma.associationTemplate.create({
       data: {
         name,
         description,
         category,
-        config: typeof config === "string" ? config : JSON.stringify(config),
-        status: status || "DRAFT",
+        reglementHtml: typeof reglementHtml === "string" ? reglementHtml : JSON.stringify(reglementHtml),
+        visibility: visibility || "PUBLIC",
       },
     });
 

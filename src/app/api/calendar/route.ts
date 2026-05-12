@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     const associations = memberships.map(m => ({
       id: m.association.id,
       name: m.association.name,
-      logoUrl: m.association.logoUrl,
+      logo: m.association.logo,
     }));
 
     // 2. Fetch AssocMeetings
