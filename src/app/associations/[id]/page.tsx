@@ -16,6 +16,12 @@ import { Badge, StatusBadge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, getInitials, getFrequencyLabel } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
 import { RegulationApprovalModal } from "@/components/association/RegulationApprovalModal";
+import LifecycleBadge from "@/components/association/LifecycleBadge";
+import RelationsPanel from "@/components/association/RelationsPanel";
+import ElectionPanel from "@/components/association/ElectionPanel";
+import WorkflowPanel from "@/components/association/WorkflowPanel";
+import ReportsPanel from "@/components/association/ReportsPanel";
+import NotificationsBell from "@/components/association/NotificationsBell";
 
 // ─── Local types ───────────────────────────────────────────────────────────────
 type AssocDetail = {
@@ -304,7 +310,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 }
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
-type TabKey = "overview" | "activities" | "members" | "meetings" | "finances" | "documents" | "chat";
+type TabKey = "overview" | "activities" | "members" | "meetings" | "finances" | "documents" | "chat" | "governance" | "relations" | "reports";
 
 export default function AssociationDetailPage() {
   const params = useParams();
@@ -503,6 +509,9 @@ export default function AssociationDetailPage() {
     { key: "finances", label: "Finances", icon: DollarSign },
     { key: "documents", label: "Documents", icon: FileText },
     { key: "chat", label: "Chat", icon: MessageSquare },
+    { key: "governance", label: "Gouvernance", icon: Gavel },
+    { key: "relations", label: "Relations", icon: Shuffle },
+    { key: "reports", label: "Rapports", icon: BarChart3 },
   ];
 
   if (loading) {
@@ -579,9 +588,7 @@ export default function AssociationDetailPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h1 className="text-2xl font-bold text-gray-900 leading-tight">{assoc.name}</h1>
-                  <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${assoc.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-error/10 text-red-800"}`}>
-                    {assoc.status === "ACTIVE" ? "Active" : "Suspendue"}
-                  </span>
+                  <LifecycleBadge status={assoc.status} />
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-graphite">
                   <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />{getAssocTypeLabel(assoc.type)}</span>
@@ -596,7 +603,8 @@ export default function AssociationDetailPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 flex-shrink-0">
+              <div className="flex flex-wrap gap-2 flex-shrink-0 items-start">
+                <NotificationsBell associationId={id} />
                 <button
                   style={{ backgroundColor: "#0d3d28" }}
                   className="inline-flex items-center gap-1.5 text-white text-sm font-medium px-3 py-2 rounded-lg hover:opacity-90 transition-opacity"
@@ -1604,6 +1612,34 @@ export default function AssociationDetailPage() {
                 </div>
               </div>
             </Card>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════
+            TAB 8 — GOUVERNANCE
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab === "governance" && (
+          <div className="space-y-6">
+            <ElectionPanel associationId={id} />
+            <WorkflowPanel associationId={id} />
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════
+            TAB 9 — RELATIONS
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab === "relations" && (
+          <div className="space-y-6">
+            <RelationsPanel associationId={id} />
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════
+            TAB 10 — RAPPORTS
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab === "reports" && (
+          <div className="space-y-6">
+            <ReportsPanel associationId={id} />
           </div>
         )}
 
