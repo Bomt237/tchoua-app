@@ -33,22 +33,44 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 3. Stats calculation
-    // Note: In a real app, these would be filtered by associationId if provided
-    const [totalContributedAgg, pendingLoansCount, recentActivity] = await Promise.all([
+    // 3. Stats calculation and real database queries
+    const [
+      totalContributedAgg,
+      pendingLoansCount,
+      recentActivity,
+      pendingAidsCount,
+      wallet,
+      tontineMemberships,
+      notifications
+    ] = await Promise.all([
       prisma.contribution.aggregate({
-        where: { userId, status: "PAID", ...(associationId ? { tontineId: { in: [] } } : {}) }, // Simulating filter
+        where: { userId, status: "PAID", ...(associationId ? { tontineId: { in: [] } } : {}) },
         _sum: { amount: true },
       }),
       prisma.loan.count({
         where: { borrowerId: userId, status: { in: ["PENDING", "APPROVED", "DISBURSED"] } },
       }),
-      // Unified activity log
       prisma.contribution.findMany({
         where: { userId },
         orderBy: { createdAt: "desc" },
         take: 5,
         include: { tontine: { select: { name: true } } }
+      }),
+      prisma.assocSocialAidRequest.count({
+        where: { status: "PENDING", membership: { userId } }
+      }),
+      prisma.wallet.findUnique({
+        where: { userId },
+        select: { balance: true }
+      }),
+      prisma.membership.findMany({
+        where: { userId, status: "ACTIVE" },
+        select: { tontineId: true }
+      }),
+      prisma.notification.findMany({
+        where: { userId, isRead: false },
+        orderBy: { createdAt: "desc" },
+        take: 5
       })
     ]);
 
@@ -61,25 +83,42 @@ export async function GET(request: NextRequest) {
       date: act.createdAt
     }));
 
-    // Dummy next session for demo
-    const nextSession = {
-      tontineName: associationId ? "Session Mensuelle" : "Tontine Familiale",
-      date: new Date(Date.now() + 86400000 * 5).toISOString(),
-    };
+    // Find real upcoming session
+    let nextSession = null;
+    const userTontineIds = tontineMemberships.map(m => m.tontineId);
+    if (userTontineIds.length > 0) {
+      const dbNextSession = await prisma.session.findFirst({
+        where: {
+          tontineId: { in: userTontineIds },
+          status: "UPCOMING",
+          startDate: { gte: new Date() }
+        },
+        orderBy: { startDate: "asc" },
+        include: { tontine: { select: { name: true } } }
+      });
+      if (dbNextSession) {
+        nextSession = {
+          tontineName: dbNextSession.tontine.name,
+          date: dbNextSession.startDate.toISOString(),
+          amount: dbNextSession.amount,
+        };
+      }
+    }
 
     return NextResponse.json({
       user: {
         ...user,
-        walletBalance: 125000, // Mocked wallet balance
+        walletBalance: wallet?.balance ?? 0,
       },
       stats: {
         tontinesCount: memberships.length,
         totalContributed: totalContributedAgg._sum.amount || 0,
         pendingLoans: pendingLoansCount,
-        pendingAids: 2,
+        pendingAids: pendingAidsCount,
       },
       recentActivity: formattedActivity,
       nextSession,
+      notifications,
       recommendations: [
         { title: "Augmenter l'épargne", desc: "Vous pourriez épargner 10% de plus ce mois-ci." }
       ]

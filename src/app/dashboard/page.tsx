@@ -167,19 +167,25 @@ export default function DashboardPage() {
               ) : data?.nextSession ? (
                 <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
                   <div className="flex flex-col items-center justify-center w-24 h-24 bg-forest rounded-xl text-white shadow-xl">
-                    <div className="text-[10px] font-black uppercase opacity-60">Juin</div>
-                    <div className="text-4xl font-black">12</div>
+                    <div className="text-[10px] font-black uppercase opacity-60">
+                      {new Date(data.nextSession.date).toLocaleString("fr-FR", { month: "short" })}
+                    </div>
+                    <div className="text-4xl font-black">
+                      {new Date(data.nextSession.date).getDate()}
+                    </div>
                   </div>
                   <div className="flex-1 text-center md:text-left space-y-2">
-                    <div className="text-lg font-semibold text-charcoal">{data.nextSession.tontineName || "Assemblée Générale Mensuelle"}</div>
+                    <div className="text-lg font-semibold text-charcoal">{data.nextSession.tontineName}</div>
                     <div className="flex flex-wrap justify-center md:justify-start gap-4">
                       <div className="flex items-center gap-2 text-xs font-bold text-graphite">
                         <History className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>18:30 - Yaoundé, Bastos</span>
+                        <span>
+                          {new Date(data.nextSession.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-xs font-bold text-graphite">
                         <Plus className="w-3.5 h-3.5 text-blue-500" />
-                        <span>Montant dû : 25,000 CFA</span>
+                        <span>Montant dû : {data.nextSession.amount ? `${data.nextSession.amount.toLocaleString()} CFA` : "0 CFA"}</span>
                       </div>
                     </div>
                   </div>
@@ -243,23 +249,39 @@ export default function DashboardPage() {
             <div className="bg-warm-white rounded-2xl border border-stone shadow-sm p-8">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xl font-semibold text-charcoal">Alertes</h2>
-                <div className="w-8 h-8 rounded-xl bg-error/10 flex items-center justify-center text-error font-black text-xs">2</div>
+                {data?.notifications && data.notifications.length > 0 && (
+                  <div className="w-8 h-8 rounded-xl bg-error/10 flex items-center justify-center text-error font-black text-xs">
+                    {data.notifications.length}
+                  </div>
+                )}
               </div>
               <div className="space-y-4">
-                {[
-                  { title: "Retard de cotisation", desc: "Tontine Famille : 10,000 CFA dû pour la session 12.", type: "URGENT", icon: AlertCircle, color: "text-error", bg: "bg-error/10" },
-                  { title: "Nouveau message", desc: "Président AMSED : Réunion extraordinaire demain.", type: "INFO", icon: Bell, color: "text-blue-500", bg: "bg-info/10" },
-                ].map((notif, i) => (
-                  <div key={i} className={`p-4 rounded-2xl border ${notif.bg === 'bg-error/10' ? 'border-red-100' : 'border-blue-100'} ${notif.bg} group cursor-pointer hover:scale-[1.02] transition-transform`}>
-                    <div className="flex gap-3">
-                      <notif.icon className={`w-4 h-4 ${notif.color} mt-0.5 flex-shrink-0`} />
-                      <div>
-                        <div className="text-xs font-semibold text-charcoal">{notif.title}</div>
-                        <p className="text-[10px] font-medium text-gray-600 mt-1 leading-relaxed">{notif.desc}</p>
+                {loading ? (
+                  <div className="text-center py-4 text-xs text-ash">Chargement...</div>
+                ) : data?.notifications && data.notifications.length > 0 ? (
+                  data.notifications.map((notif: any, i: number) => {
+                    const isUrgent = notif.type === "URGENT" || notif.type === "ALERT" || notif.type === "ERROR";
+                    return (
+                      <div key={i} className={`p-4 rounded-2xl border ${isUrgent ? 'border-red-100 bg-error/10' : 'border-blue-100 bg-info/10'} group cursor-pointer hover:scale-[1.02] transition-transform`}>
+                        <div className="flex gap-3">
+                          {isUrgent ? (
+                            <AlertCircle className="w-4 h-4 text-error mt-0.5 flex-shrink-0" />
+                          ) : (
+                            <Bell className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                          )}
+                          <div>
+                            <div className="text-xs font-semibold text-charcoal">{notif.title}</div>
+                            <p className="text-[10px] font-medium text-gray-600 mt-1 leading-relaxed">{notif.message}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-xs text-ash/60 uppercase tracking-widest font-bold">
+                    Aucune alerte
                   </div>
-                ))}
+                )}
               </div>
             </div>
 

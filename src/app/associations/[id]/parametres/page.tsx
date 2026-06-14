@@ -85,10 +85,22 @@ export default function ParametresPage() {
 
   const reload = useCallback(() => {
     fetch(`/api/associations/${id}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) {
+          const text = await r.text();
+          let errData;
+          try { errData = JSON.parse(text); } catch { errData = {}; }
+          throw new Error(errData.error ?? `HTTP error ${r.status}`);
+        }
+        return r.json();
+      })
       .then((d) => {
         setAssoc(d.association);
         setMyRole(d.myRole);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("[RELOAD_ERROR]", err);
         setLoading(false);
       });
   }, [id]);
