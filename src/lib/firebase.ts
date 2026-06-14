@@ -13,15 +13,38 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const isFirebaseConfigured = 
+  !!firebaseConfig.apiKey && 
+  firebaseConfig.apiKey !== "your-api-key" && 
+  firebaseConfig.apiKey !== "VOTRE_CLE_FIREBASE";
 
-// Analytics - Only on client side
-const analytics = typeof window !== "undefined" ? isSupported().then(yes => yes ? getAnalytics(app) : null) : null;
+let app: any = null;
+let auth: any = null;
+let analytics: any = null;
 
-const googleProvider = new GoogleAuthProvider();
-const facebookProvider = new FacebookAuthProvider();
-const twitterProvider = new TwitterAuthProvider();
-const githubProvider = new GithubAuthProvider();
+let googleProvider: any = null;
+let facebookProvider: any = null;
+let twitterProvider: any = null;
+let githubProvider: any = null;
+
+if (isFirebaseConfigured) {
+  try {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    analytics = typeof window !== "undefined" ? isSupported().then(yes => yes ? getAnalytics(app) : null) : null;
+    
+    googleProvider = new GoogleAuthProvider();
+    facebookProvider = new FacebookAuthProvider();
+    twitterProvider = new TwitterAuthProvider();
+    githubProvider = new GithubAuthProvider();
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
+  }
+} else {
+  if (typeof window !== "undefined") {
+    console.warn("Firebase is not configured: NEXT_PUBLIC_FIREBASE_API_KEY is not set. Social login will be unavailable.");
+  }
+}
 
 export { auth, analytics, googleProvider, facebookProvider, twitterProvider, githubProvider };
+

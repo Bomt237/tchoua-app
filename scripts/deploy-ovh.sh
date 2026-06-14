@@ -134,6 +134,10 @@ npm ci
 
 # ─── ÉTAPE 7 : Migration de la base de données (Prisma) ─────────────────────
 log "Étape 7/10 : Génération du client Prisma et migrations..."
+if [ -f "prisma/schema.prisma.ovh" ]; then
+  cp prisma/schema.prisma.ovh prisma/schema.prisma
+  log "Configuration de la base de données basculée sur PostgreSQL (schema.prisma.ovh)."
+fi
 npx prisma generate
 
 # Vérifie si la table _prisma_migrations existe (baselining requis)

@@ -23,7 +23,8 @@ ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholde
 ENV NEXTAUTH_SECRET="placeholder-secret-for-build-only"
 ENV NEXTAUTH_URL="http://localhost:3000"
 
-# Générer le client Prisma et builder l'app
+# Générer le client Prisma (en s'assurant d'utiliser la configuration PostgreSQL pour la production) et builder l'app
+RUN if [ -f prisma/schema.prisma.ovh ]; then cp prisma/schema.prisma.ovh prisma/schema.prisma; fi
 RUN npx prisma generate
 RUN npm run build
 

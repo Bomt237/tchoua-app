@@ -84,6 +84,9 @@ function LoginContent() {
     
     try {
       const provider = providerName === "google" ? googleProvider : facebookProvider;
+      if (!auth || !provider) {
+        throw new Error("CONFIG_ERROR");
+      }
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const token = await user.getIdToken();
@@ -101,7 +104,9 @@ function LoginContent() {
       }
     } catch (err: any) {
       console.error(`[SOCIAL_LOGIN_ERROR] ${providerName}`, err);
-      if (err.code === "auth/popup-closed-by-user") {
+      if (err.message === "CONFIG_ERROR") {
+        setError("La connexion sociale n'est pas configurée (clé Firebase manquante)");
+      } else if (err.code === "auth/popup-closed-by-user") {
         setError("Connexion annulée");
       } else {
         setError("Échec de la connexion sociale");
